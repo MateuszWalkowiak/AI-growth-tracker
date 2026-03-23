@@ -12,18 +12,40 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.MateuszW.aigrowthtracker.ui.theme.AIGrowthTrackerTheme
-
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AIGrowthTrackerTheme {
-                MainScreen(
-                    onAddTaskClick = { },
-                    onExecuteTaskClick = {  }
+            val navController = rememberNavController()
+
+            NavHost(navController = navController, startDestination = "main_screen") {
+
+                //ekran główny
+                composable("main_screen") {
+                    MainScreen(
+                        onAddTaskClick = {
+                            navController.navigate("add_task_screen")
+                        },
+                        onExecuteTaskClick = {}
                     )
+                }
+                //dodawanie zadania
+                composable("add_task_screen") {
+                    AddTaskScreen(
+                        onSaveClick = {
+                            //zapisanie danych do bazy TO DO
+                            navController.popBackStack()
+                        },
+                        onCancelClick = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
             }
         }
     }
