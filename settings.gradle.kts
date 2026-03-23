@@ -22,6 +22,7 @@ dependencyResolutionManagement {
     }
 }
 
+
 rootProject.name = "AI growth tracker"
 include(":app")
  
