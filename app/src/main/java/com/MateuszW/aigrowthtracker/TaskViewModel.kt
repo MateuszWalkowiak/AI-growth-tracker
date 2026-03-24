@@ -14,11 +14,20 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import android.content.Context
-
+import androidx.lifecycle.viewModelScope
+import com.MateuszW.aigrowthtracker.data.TaskSummary
 class TaskViewModel(
     private val taskDao: TaskDao,
-    private val taskHistoryDao: TaskHistoryDao
+    private val taskHistoryDao: TaskHistoryDao,
 ) : ViewModel() {
+    private var timerJob: kotlinx.coroutines.Job? = null
+
+    val taskSummaries: StateFlow<List<TaskSummary>> =
+        taskHistoryDao.getTaskSummaries()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val history: StateFlow<List<TaskHistoryEntity>> =
+        taskHistoryDao.getAllHistory()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _activeTask = MutableStateFlow<TaskEntity?>(null)
     val activeTask: StateFlow<TaskEntity?> = _activeTask
@@ -41,20 +50,23 @@ class TaskViewModel(
         }
     }
     fun startTask(task: TaskEntity, context: Context) {
+
+        timerJob?.cancel()
         _activeTask.value = task
         _remainingTime.value = task.durationMinutes * 60
-
-        viewModelScope.launch {
-            while (_remainingTime.value > 0) {
+        timerJob = viewModelScope.launch {
+            while (_remainingTime.value > 0 && _activeTask.value != null) {
                 delay(1000)
                 _remainingTime.value -= 1
             }
 
-            NotificationHelper.showNotification(
-                context,
-                "Czas minął",
-                "Sprawdź swoje zadanie!"
-            )
+            if (_activeTask.value != null) {
+                NotificationHelper.showNotification(
+                    context,
+                    "Czas minął",
+                    "Sprawdź swoje zadanie!"
+                )
+            }
         }
     }
 
@@ -81,8 +93,37 @@ class TaskViewModel(
     }
 
     fun cancelTask() {
+        timerJob?.cancel()
         _activeTask.value = null
     }
+
+    fun finishTaskWithSummary(rating: Int, note: String) {
+        timerJob?.cancel()
+        _activeTask.value?.let { task ->
+            viewModelScope.launch {
+
+                taskDao.insertTask(task.copy(isCompleted = true))
+
+                //zapis historii
+                val history = TaskHistoryEntity(
+                    taskId = task.id,
+                    taskName = task.taskName,
+                    category = task.category,
+                    date = System.currentTimeMillis(),
+                    completed = true,
+                    rating = rating,
+                    note = note
+                )
+
+                taskHistoryDao.insert(history)
+            }
+        }
+
+        _activeTask.value = null
+    }
+    fun getTaskHistory(taskId: Int): StateFlow<List<TaskHistoryEntity>> =
+        taskHistoryDao.getHistoryForTask(taskId)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun generateTaskWithGemini(task: TaskEntity) {
         viewModelScope.launch {

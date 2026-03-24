@@ -11,7 +11,8 @@ import androidx.compose.ui.unit.dp
 import com.MateuszW.aigrowthtracker.data.TaskEntity
 import kotlin.random.Random
 import androidx.compose.ui.platform.LocalContext
-
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExecuteTaskScreen(
@@ -21,13 +22,17 @@ fun ExecuteTaskScreen(
     onStartTask: (TaskEntity, android.content.Context) -> Unit,
     onFinishTask: () -> Unit,
     onCancelTask: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onFinishTaskWithSummary: (Int, String) -> Unit,
 ) {
     var selectedCategoryForRoll by remember { mutableStateOf("Wszystkie") }
     val categories = listOf("Wszystkie") + tasks.map { it.category }.distinct()
     var rolledTask by remember { mutableStateOf<TaskEntity?>(null) }
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    var showSummaryDialog by remember { mutableStateOf(false) }
+    var rating by remember { mutableStateOf(0) }
+    var note by remember { mutableStateOf("") }
     Scaffold(
         topBar = { TopAppBar(title = { Text("Wykonaj zadanie") }) }
     ) { padding ->
@@ -128,7 +133,7 @@ fun ExecuteTaskScreen(
                         )
 
                         Row {
-                            Button(onClick = onFinishTask) {
+                            Button(onClick = { showSummaryDialog = true }) {
                                 Text("Zrobione")
                             }
                             Spacer(modifier = Modifier.width(8.dp))
@@ -154,6 +159,67 @@ fun ExecuteTaskScreen(
                     },
                     dismissButton = {
                         OutlinedButton(onClick = { showDialog = false }) {
+                            Text("Anuluj")
+                        }
+                    }
+                )
+            }
+            if (showSummaryDialog && activeTask != null) {
+                AlertDialog(
+                    onDismissRequest = { showSummaryDialog = false },
+                    title = { Text("Podsumuj zadanie") },
+                    text = {
+                        Column {
+
+                            Text("Ocena:")
+
+                            Row {
+                                (1..5).forEach { star ->
+                                    IconButton(onClick = { rating = star }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Star,
+                                            contentDescription = null,
+                                            tint = if (star <= rating)
+                                                MaterialTheme.colorScheme.primary
+                                            else
+                                                MaterialTheme.colorScheme.outline
+                                        )
+                                    }
+                                }
+                            }
+
+                            OutlinedTextField(
+                                value = note,
+                                onValueChange = { note = it },
+                                label = { Text("Notatka (opcjonalnie)") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        val isAiTask = activeTask?.isAIGenerated == true
+
+                        Button(
+                            onClick = {
+                                onFinishTaskWithSummary(rating, note)
+                                showSummaryDialog = false
+                                rating = 0
+                                note = ""
+                            },
+                            //ocena wymagana dla każdego zadnia, feedback tylko da zadan generowanych przez ai
+                            enabled = rating > 0 && (!isAiTask || note.isNotBlank())
+                        ) {
+                            Text("Zapisz")
+                            if (isAiTask && note.isBlank()) {
+                                Text(
+                                    "Dodaj feedback dla AI",
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    },
+                    dismissButton = {
+                        OutlinedButton(onClick = { showSummaryDialog = false }) {
                             Text("Anuluj")
                         }
                     }

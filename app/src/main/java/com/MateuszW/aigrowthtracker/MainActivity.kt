@@ -45,8 +45,8 @@ class MainActivity : ComponentActivity() {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         return TaskViewModel(
-                            db.taskDao(),
-                            db.taskHistoryDao()
+                            taskDao = db.taskDao(),
+                            taskHistoryDao = db.taskHistoryDao()
                         ) as T
                     }
                 }
@@ -69,7 +69,8 @@ class MainActivity : ComponentActivity() {
                             remainingTime = remainingTime,
                             dailyGoal = 5,
                             onAddTaskClick = { navController.navigate("add_task_screen") },
-                            onExecuteTaskClick = { navController.navigate("execute_task_screen") }
+                            onExecuteTaskClick = { navController.navigate("execute_task_screen") },
+                            onStatsClick = { navController.navigate("stats_screen") }
                         )
                     }
                     composable("add_task_screen") {
@@ -96,8 +97,34 @@ class MainActivity : ComponentActivity() {
                             onStartTask = { task, context ->
                                 viewModel.startTask(task, context)
                             },
+                            onFinishTaskWithSummary = { rating, note ->
+                                viewModel.finishTaskWithSummary(rating, note)
+                            },
                             onFinishTask = { viewModel.finishTask() },
                             onCancelTask = { viewModel.cancelTask() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable("stats_screen") {
+                        val history by viewModel.history.collectAsState(initial = emptyList())
+
+                        val summaries by viewModel.taskSummaries.collectAsState()
+
+                        StatisticsScreen(
+                            summaries = summaries,
+                            history = history,
+                            onTaskClick = { taskId ->
+                                navController.navigate("task_details/$taskId")
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable("task_details/{taskId}") { backStackEntry ->
+                        val taskId = backStackEntry.arguments?.getString("taskId")!!.toInt()
+                        val history by viewModel.getTaskHistory(taskId).collectAsState()
+
+                        TaskDetailsScreen(
+                            history = history,
                             onBack = { navController.popBackStack() }
                         )
                     }

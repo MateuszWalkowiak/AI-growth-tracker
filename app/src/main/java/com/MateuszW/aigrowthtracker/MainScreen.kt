@@ -22,6 +22,7 @@ fun MainScreen(
     dailyGoal: Int,
     onAddTaskClick: () -> Unit,
     onExecuteTaskClick: () -> Unit,
+    onStatsClick: () -> Unit,
     activeTask: TaskEntity?,
     remainingTime: Int
 ) {
@@ -110,14 +111,35 @@ fun MainScreen(
                 }
             }
 
-            Button(
-                onClick = onExecuteTaskClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp),
-                shape = RoundedCornerShape(12.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("WYKONAJ ZADANIE", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+
+                //wykonaj zadnaie
+                Button(
+                    onClick = onExecuteTaskClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("WYKONAJ ZADANIE", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+
+                //statystki
+                Button(
+                    onClick = onStatsClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text("STATYSTYKI", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
