@@ -13,19 +13,38 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.MateuszW.aigrowthtracker.data.TaskEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    tasks: List<TaskEntity>,
+    dailyGoal: Int,
     onAddTaskClick: () -> Unit,
-    onExecuteTaskClick: () -> Unit
+    onExecuteTaskClick: () -> Unit,
+    activeTask: TaskEntity?,
+    remainingTime: Int
 ) {
+
+    val completedTasks = tasks.count { it.isCompleted }
+
+    val effectiveTotal = if (tasks.isNotEmpty()) {
+        dailyGoal.coerceAtMost(tasks.size)
+    } else 1
+
+    val progress = (completedTasks.coerceAtMost(effectiveTotal) * 100) / effectiveTotal
+
+    val progressColor = Color(
+        red = 1f - (progress / 100f),
+        green = (progress / 100f),
+        blue = 0.2f
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("AI Growth Tracker", fontWeight = FontWeight.Bold) },
                 actions = {
-                    //dodaj nowe zadanie
                     IconButton(onClick = onAddTaskClick) {
                         Icon(Icons.Default.Add, contentDescription = "Dodaj zadanie")
                     }
@@ -33,6 +52,7 @@ fun MainScreen(
             )
         }
     ) { paddingValues ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -40,20 +60,56 @@ fun MainScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            //podsumowanie dnia
+
+            //Podsumowanie dnia
             Text(
-                text = "Dzisiejszy postęp: 60%", //TO DO
-                fontSize = 24.sp,
+                text = "Dzisiejszy postęp:",
+                fontSize = 18.sp
+            )
+
+            Text(
+                text = "$completedTasks / $effectiveTotal ($progress%)",
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
+                color = progressColor,
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            //widok kalendarza
+            //kalendarz(mock)
             CalendarWeekMock()
 
             Spacer(modifier = Modifier.weight(1f))
 
-            //opcja wykonania zadania
+            activeTask?.let {
+
+                val minutes = remainingTime / 60
+                val seconds = remainingTime % 60
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+
+                        Text(
+                            "Aktywne zadanie",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+
+                        Text(
+                            it.taskName,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = "Pozostało: %02d:%02d".format(minutes, seconds),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+
             Button(
                 onClick = onExecuteTaskClick,
                 modifier = Modifier

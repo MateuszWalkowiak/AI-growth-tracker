@@ -10,18 +10,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.MateuszW.aigrowthtracker.data.TaskEntity
 import kotlin.random.Random
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExecuteTaskScreen(
     tasks: List<TaskEntity>,
-    onTaskSelected: (TaskEntity) -> Unit,
+    activeTask: TaskEntity?,
+    remainingTime: Int,
+    onStartTask: (TaskEntity, android.content.Context) -> Unit,
+    onFinishTask: () -> Unit,
+    onCancelTask: () -> Unit,
     onBack: () -> Unit
 ) {
     var selectedCategoryForRoll by remember { mutableStateOf("Wszystkie") }
     val categories = listOf("Wszystkie") + tasks.map { it.category }.distinct()
     var rolledTask by remember { mutableStateOf<TaskEntity?>(null) }
-
+    var showDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     Scaffold(
         topBar = { TopAppBar(title = { Text("Wykonaj zadanie") }) }
     ) { padding ->
@@ -57,14 +63,19 @@ fun ExecuteTaskScreen(
 
                     Button(
                         onClick = {
-                            val filtered = if (selectedCategoryForRoll == "Wszystkie") tasks
-                            else tasks.filter { it.category == selectedCategoryForRoll }
+                            val filtered = if (selectedCategoryForRoll == "Wszystkie") {
+                                tasks.filter { !it.isCompleted }//nie losuje wykonanych zadan
+                            } else {
+                                tasks.filter { it.category == selectedCategoryForRoll && !it.isCompleted }
+                            }
+
                             if (filtered.isNotEmpty()) {
-                                rolledTask = filtered[Random.nextInt(filtered.size)]
+                                rolledTask = filtered.random()
+                                showDialog = true
                             }
                         },
-                        modifier = Modifier.padding(top = 8.dp).fillMaxWidth()
-                    ) {
+                        enabled = activeTask == null
+                    ){
                         Text("LOSUJ")
                     }
 
@@ -73,21 +84,80 @@ fun ExecuteTaskScreen(
                             modifier = Modifier.padding(top = 8.dp),
                             color = MaterialTheme.colorScheme.primary)
                     }
+
                 }
             }
 
             Text("Lub wybierz z listy:", style = MaterialTheme.typography.titleSmall)
 
-            LazyColumn {
+            LazyColumn(
+                modifier = Modifier.weight(1f)
+            ) {
                 items(tasks) { task ->
                     ListItem(
                         headlineContent = { Text(task.taskName) },
                         supportingContent = { Text(task.category) },
                         trailingContent = {
-                            Button(onClick = { onTaskSelected(task) }) { Text("Start") }
+                            Button(
+                                onClick = { onStartTask(task, context) },
+                                enabled = activeTask == null //blokowanie staru wielu zadan jednoczesnie
+                            ) {
+                                Text("Start")
+                            }
                         }
                     )
                 }
+            }
+            //timer czasu na zadnie
+            activeTask?.let {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+
+                        Text("Aktywne zadanie: ${it.taskName}")
+
+                        val minutes = remainingTime / 60
+                        val seconds = remainingTime % 60
+
+                        Text(
+                            text = "Pozostało: %02d:%02d".format(minutes, seconds),
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+
+                        Row {
+                            Button(onClick = onFinishTask) {
+                                Text("Zrobione")
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            OutlinedButton(onClick = onCancelTask) {
+                                Text("Anuluj")
+                            }
+                        }
+                    }
+                }
+            }
+            if (showDialog && rolledTask != null) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    title = { Text("Wylosowano zadanie") },
+                    text = { Text("${rolledTask!!.taskName} (${rolledTask!!.category})") },
+                    confirmButton = {
+                        Button(onClick = {
+                            onStartTask(rolledTask!!, context)
+                            showDialog = false
+                        }) {
+                            Text("Rozpocznij")
+                        }
+                    },
+                    dismissButton = {
+                        OutlinedButton(onClick = { showDialog = false }) {
+                            Text("Anuluj")
+                        }
+                    }
+                )
             }
         }
     }

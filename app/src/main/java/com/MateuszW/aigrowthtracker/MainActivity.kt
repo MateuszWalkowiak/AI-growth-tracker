@@ -16,10 +16,25 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.MateuszW.aigrowthtracker.data.AppDatabase
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                1
+            )
+        }
         enableEdgeToEdge()
         setContent {
             MaterialTheme {
@@ -29,7 +44,10 @@ class MainActivity : ComponentActivity() {
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return TaskViewModel(db.taskDao()) as T
+                        return TaskViewModel(
+                            db.taskDao(),
+                            db.taskHistoryDao()
+                        ) as T
                     }
                 }
                 val viewModel: TaskViewModel = viewModel(factory = factory)
@@ -42,8 +60,14 @@ class MainActivity : ComponentActivity() {
 
                     composable("main_screen") {
                         val tasks by viewModel.allTasks.collectAsState(initial = emptyList())
+                        val activeTask by viewModel.activeTask.collectAsState()
+                        val remainingTime by viewModel.remainingTime.collectAsState()
 
                         MainScreen(
+                            tasks = tasks,
+                            activeTask = activeTask,
+                            remainingTime = remainingTime,
+                            dailyGoal = 5,
                             onAddTaskClick = { navController.navigate("add_task_screen") },
                             onExecuteTaskClick = { navController.navigate("execute_task_screen") }
                         )
@@ -62,9 +86,18 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("execute_task_screen") {
                         val tasks by viewModel.allTasks.collectAsState(initial = emptyList())
+                        val activeTask by viewModel.activeTask.collectAsState()
+                        val remainingTime by viewModel.remainingTime.collectAsState()
+
                         ExecuteTaskScreen(
                             tasks = tasks,
-                            onTaskSelected = { },
+                            activeTask = activeTask,
+                            remainingTime = remainingTime,
+                            onStartTask = { task, context ->
+                                viewModel.startTask(task, context)
+                            },
+                            onFinishTask = { viewModel.finishTask() },
+                            onCancelTask = { viewModel.cancelTask() },
                             onBack = { navController.popBackStack() }
                         )
                     }
