@@ -10,11 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.MateuszW.aigrowthtracker.data.TaskEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskScreen(
-    onSaveClick: () -> Unit,
+    onSaveClick: (TaskEntity) -> Unit,
     onCancelClick: () -> Unit
 ) {
     val defaultCategories = listOf("Sport", "Umysł", "Zdrowie", "Kreatywność", "Inna")
@@ -173,12 +174,25 @@ fun AddTaskScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // 5. PRZYCISKI
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 OutlinedButton(onClick = onCancelClick, modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                     Text("Anuluj")
                 }
-                Button(onClick = onSaveClick, modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+                Button(
+                    onClick = {
+                        val newTask = com.MateuszW.aigrowthtracker.data.TaskEntity(
+                            category = if (selectedCategory == "Inna") customCategory else selectedCategory,
+                            taskName = if (selectedTask == "Inne") customTaskName else selectedTask,
+                            durationMinutes = durationMinutes.toInt(),
+                            isMandatory = isMandatory,
+                            isAIGenerated = isAIGenerated,
+                            aiCurrentLevel = if (isAIGenerated) currentLevel else null,
+                            aiGoals = if (isAIGenerated) goals else null
+                        )
+                        onSaveClick(newTask)
+                    },
+                    modifier = Modifier.weight(1f).padding(start = 8.dp)
+                ) {
                     Text("Zapisz")
                 }
             }

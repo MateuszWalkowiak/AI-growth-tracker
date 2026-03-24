@@ -4,47 +4,57 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.MateuszW.aigrowthtracker.ui.theme.AIGrowthTrackerTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.MateuszW.aigrowthtracker.data.AppDatabase
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val navController = rememberNavController()
+            MaterialTheme {
+                val context = LocalContext.current
+                val db = remember { AppDatabase.getDatabase(context) }
 
-            NavHost(navController = navController, startDestination = "main_screen") {
-
-                //ekran główny
-                composable("main_screen") {
-                    MainScreen(
-                        onAddTaskClick = {
-                            navController.navigate("add_task_screen")
-                        },
-                        onExecuteTaskClick = {}
-                    )
+                val factory = object : ViewModelProvider.Factory {
+                    @Suppress("UNCHECKED_CAST")
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return TaskViewModel(db.taskDao()) as T
+                    }
                 }
-                //dodawanie zadania
-                composable("add_task_screen") {
-                    AddTaskScreen(
-                        onSaveClick = {
-                            //zapisanie danych do bazy TO DO
-                            navController.popBackStack()
-                        },
-                        onCancelClick = {
-                            navController.popBackStack()
-                        }
-                    )
+                val viewModel: TaskViewModel = viewModel(factory = factory)
+
+                val navController = rememberNavController()
+
+                NavHost(navController = navController, startDestination = "main_screen") {
+
+                    composable("main_screen") {
+                        val tasks by viewModel.allTasks.collectAsState()
+
+                        MainScreen(
+                            onAddTaskClick = { navController.navigate("add_task_screen") },
+                            onExecuteTaskClick = { }
+                        )
+                    }
+                    composable("add_task_screen") {
+                        AddTaskScreen(
+                            onSaveClick = { newTask ->
+                                viewModel.saveTask(newTask)
+                                navController.popBackStack()
+                            },
+                            onCancelClick = { navController.popBackStack() }
+                        )
+                    }
                 }
             }
         }
@@ -52,18 +62,3 @@ class MainActivity : ComponentActivity() {
 }
 
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AIGrowthTrackerTheme {
-        Greeting("Android")
-    }
-}

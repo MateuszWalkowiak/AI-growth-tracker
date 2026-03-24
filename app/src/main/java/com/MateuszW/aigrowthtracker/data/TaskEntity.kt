@@ -15,5 +15,6 @@ data class TaskEntity(
 
     val isAIGenerated: Boolean,
     val aiCurrentLevel: String? = null,
-    val aiGoals: String? = null
+    val aiGoals: String? = null,
+    val isCompleted: Boolean = false
 )
