@@ -36,23 +36,36 @@ class MainActivity : ComponentActivity() {
 
                 val navController = rememberNavController()
 
+
+
                 NavHost(navController = navController, startDestination = "main_screen") {
 
                     composable("main_screen") {
-                        val tasks by viewModel.allTasks.collectAsState()
+                        val tasks by viewModel.allTasks.collectAsState(initial = emptyList())
 
                         MainScreen(
                             onAddTaskClick = { navController.navigate("add_task_screen") },
-                            onExecuteTaskClick = { }
+                            onExecuteTaskClick = { navController.navigate("execute_task_screen") }
                         )
                     }
                     composable("add_task_screen") {
+                        val categories by viewModel.existingCategories.collectAsState(initial = emptyList())
+
                         AddTaskScreen(
+                            categoriesFromDb = categories,
                             onSaveClick = { newTask ->
                                 viewModel.saveTask(newTask)
                                 navController.popBackStack()
                             },
                             onCancelClick = { navController.popBackStack() }
+                        )
+                    }
+                    composable("execute_task_screen") {
+                        val tasks by viewModel.allTasks.collectAsState(initial = emptyList())
+                        ExecuteTaskScreen(
+                            tasks = tasks,
+                            onTaskSelected = { },
+                            onBack = { navController.popBackStack() }
                         )
                     }
                 }

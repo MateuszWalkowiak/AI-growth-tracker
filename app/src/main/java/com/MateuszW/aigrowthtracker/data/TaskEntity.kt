@@ -13,6 +13,9 @@ data class TaskEntity(
     val durationMinutes: Int,
     val isMandatory: Boolean,
 
+    val recurrenceType: String? = null,
+    val recurrenceValue: String? = null,
+
     val isAIGenerated: Boolean,
     val aiCurrentLevel: String? = null,
     val aiGoals: String? = null,
