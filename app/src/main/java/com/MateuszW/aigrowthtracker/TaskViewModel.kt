@@ -14,13 +14,36 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import android.content.Context
-import androidx.lifecycle.viewModelScope
 import com.MateuszW.aigrowthtracker.data.TaskSummary
+import androidx.compose.runtime.mutableStateOf
+import java.text.SimpleDateFormat
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.Locale
+import java.util.Calendar
+import com.MateuszW.aigrowthtracker.BuildConfig
+
 class TaskViewModel(
     private val taskDao: TaskDao,
     private val taskHistoryDao: TaskHistoryDao,
 ) : ViewModel() {
     private var timerJob: kotlinx.coroutines.Job? = null
+    private val retrofit = Retrofit.Builder()
+        .baseUrl("https://calendarific.com/api/v2/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    private val holidayService = retrofit.create(HolidayService::class.java)
+
+    val holidays = mutableStateOf<List<Long>>(emptyList())
+    val showHolidays = mutableStateOf(true)
+    val showWeekends = mutableStateOf(true)
+
+    init {
+        if (holidays.value.isEmpty()) {
+            loadHolidays()
+        }
+    }
 
     val taskSummaries: StateFlow<List<TaskSummary>> =
         taskHistoryDao.getTaskSummaries()
@@ -40,6 +63,11 @@ class TaskViewModel(
     val existingCategories: StateFlow<List<String>> = taskDao.getUniqueCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val completedDates: StateFlow<List<Long>> =
+        taskHistoryDao.getCompletedDates()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val accountCreatedAt = System.currentTimeMillis()
     private val _aiTaskSuggestion = MutableStateFlow<String?>(null)
     val aiTaskSuggestion: StateFlow<String?> = _aiTaskSuggestion
 
@@ -125,6 +153,69 @@ class TaskViewModel(
         taskHistoryDao.getHistoryForTask(taskId)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    fun dayStart(time: Long): Long {
+        val cal = java.util.Calendar.getInstance()
+        cal.timeInMillis = time
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        cal.set(java.util.Calendar.MINUTE, 0)
+        cal.set(java.util.Calendar.SECOND, 0)
+        cal.set(java.util.Calendar.MILLISECOND, 0)
+        return cal.timeInMillis
+    }
+
+    fun getHistoryForDay(day: Long): StateFlow<List<TaskHistoryEntity>> {
+
+        val start = dayStart(day)
+        val end = start + 86400000
+
+        return taskHistoryDao.getHistoryForDay(start, end)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }
+
+    fun loadHolidays() {
+        viewModelScope.launch {
+            try {
+                val holidaysResponse = holidayService.getHolidays(
+                    key = BuildConfig.HOLIDAY_API_KEY,
+                    year = Calendar.getInstance().get(Calendar.YEAR)
+                )
+
+                val parsed = holidaysResponse.response.holidays
+                    //filtrowanie swiat
+                    .filter { holiday ->
+
+                        val types = holiday.type
+
+                        val isRealHoliday =
+                            types.contains("National holiday") ||
+                                    types.contains("Public holiday")
+
+                        val isImportantFallback =
+                            holiday.name.contains("Easter", ignoreCase = true) ||
+                                    holiday.name.contains("Christmas", ignoreCase = true) ||
+                                    holiday.name.contains("New Year", ignoreCase = true) ||
+                                    holiday.name.contains("Wielkanoc", ignoreCase = true) ||
+                                    holiday.name.contains("Boże Narodzenie", ignoreCase = true) ||
+                                    holiday.name.contains("Sylwester", ignoreCase = true)
+
+                        isRealHoliday || isImportantFallback
+                    }
+                    .map { holiday ->
+                        normalizeDay(
+                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                .parse(holiday.date.iso)!!
+                                .time
+                        )
+                    }
+
+                holidays.value = parsed
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun generateTaskWithGemini(task: TaskEntity) {
         viewModelScope.launch {
             try {
@@ -154,5 +245,14 @@ class TaskViewModel(
 
     fun clearAiSuggestion() {
         _aiTaskSuggestion.value = null
+    }
+    fun normalizeDay(time: Long): Long {
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = time
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        return cal.timeInMillis
     }
 }

@@ -20,6 +20,12 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.compose.runtime.LaunchedEffect
+import com.MateuszW.aigrowthtracker.data.TaskHistoryEntity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateOf
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,6 +46,24 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 val context = LocalContext.current
                 val db = remember { AppDatabase.getDatabase(context) }
+                LaunchedEffect(Unit) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val existing = db.taskHistoryDao().getAllHistoryOnce()
+
+                        if (existing.isEmpty()) {
+                            db.taskHistoryDao().insert(
+                                TaskHistoryEntity(
+                                    taskId = -1,
+                                    taskName = "Witamy w aplikacji",
+                                    category = "System",
+                                    date = System.currentTimeMillis(),
+                                    completed = true,
+                                    note = "Trzymamy za Ciebie kciuki!"
+                                )
+                            )
+                        }
+                    }
+                }
 
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
@@ -52,7 +76,20 @@ class MainActivity : ComponentActivity() {
                 }
                 val viewModel: TaskViewModel = viewModel(factory = factory)
 
+                LaunchedEffect(Unit) {
+                    viewModel.loadHolidays()//zczytanie swiat z zewnetrznego API
+                }
+
                 val navController = rememberNavController()
+
+                val accountCreationDateState = remember { mutableStateOf<Long?>(null) }
+
+                LaunchedEffect(Unit) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val date = db.taskHistoryDao().getRealFirstDate()
+                        accountCreationDateState.value = date
+                    }
+                }
 
 
 
@@ -62,15 +99,26 @@ class MainActivity : ComponentActivity() {
                         val tasks by viewModel.allTasks.collectAsState(initial = emptyList())
                         val activeTask by viewModel.activeTask.collectAsState()
                         val remainingTime by viewModel.remainingTime.collectAsState()
+                        val completedDates by viewModel.completedDates.collectAsState()
+                        val holidays by viewModel.holidays
+                        val showHolidays by viewModel.showHolidays
+                        val showWeekends by viewModel.showWeekends
 
                         MainScreen(
                             tasks = tasks,
                             activeTask = activeTask,
                             remainingTime = remainingTime,
                             dailyGoal = 5,
+                            completedDates = completedDates,
+                            holidays = holidays,
+                            showHolidays = showHolidays,
+                            showWeekends = showWeekends,
                             onAddTaskClick = { navController.navigate("add_task_screen") },
                             onExecuteTaskClick = { navController.navigate("execute_task_screen") },
-                            onStatsClick = { navController.navigate("stats_screen") }
+                            onStatsClick = { navController.navigate("stats_screen") },
+                            onDayClick = { day ->
+                                navController.navigate("day_details/$day")
+                            }
                         )
                     }
                     composable("add_task_screen") {
@@ -125,6 +173,18 @@ class MainActivity : ComponentActivity() {
 
                         TaskDetailsScreen(
                             history = history,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable("day_details/{day}") { backStackEntry ->
+
+                        val day = backStackEntry.arguments?.getString("day")!!.toLong()
+
+                        val history by viewModel.getHistoryForDay(day).collectAsState()
+
+                        DayDetailsScreen(
+                            history = history,
+                            dailyGoal = 5,
                             onBack = { navController.popBackStack() }
                         )
                     }

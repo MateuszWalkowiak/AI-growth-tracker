@@ -27,4 +27,22 @@ interface TaskHistoryDao {
     fun getTaskSummaries(): Flow<List<TaskSummary>>
     @Query("SELECT * FROM task_history WHERE taskId = :taskId ORDER BY date DESC")
     fun getHistoryForTask(taskId: Int): Flow<List<TaskHistoryEntity>>
+
+    @Query("""
+    SELECT date FROM task_history 
+    WHERE completed = 1
+""")
+    fun getCompletedDates(): Flow<List<Long>>
+
+    @Query("""
+    SELECT * FROM task_history 
+    WHERE date BETWEEN :start AND :end
+""")
+    fun getHistoryForDay(start: Long, end: Long): Flow<List<TaskHistoryEntity>>
+
+    @Query("SELECT * FROM task_history")
+    suspend fun getAllHistoryOnce(): List<TaskHistoryEntity>
+
+    @Query("SELECT MIN(date) FROM task_history WHERE taskId != -1")
+    suspend fun getRealFirstDate(): Long? //funkcja pomocnicza tymczasowa
 }
