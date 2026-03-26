@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.MateuszW.aigrowthtracker.data.TaskEntity
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -362,7 +363,12 @@ fun RealCalendarWeek(
                             .aspectRatio(1f)
                             .padding(2.dp)
                             .background(color, RoundedCornerShape(8.dp))
-                            .clickable { onDayClick(dayMillis) },
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                onDayClick(dayMillis)
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(day.toString(), color = Color.White)
