@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Settings
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,6 +37,7 @@ fun MainScreen(
     onDayClick: (Long) -> Unit,
     onExecuteTaskClick: () -> Unit,
     onStatsClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     activeTask: TaskEntity?,
     remainingTime: Int
 ) {
@@ -66,6 +68,10 @@ fun MainScreen(
                 actions = {
                     IconButton(onClick = onAddTaskClick) {
                         Icon(Icons.Default.Add, contentDescription = "Dodaj zadanie")
+                    }
+
+                    IconButton(onClick = { onSettingsClick() }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Ustawienia")
                     }
                 }
             )

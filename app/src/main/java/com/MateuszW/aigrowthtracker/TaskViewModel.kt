@@ -22,6 +22,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Locale
 import java.util.Calendar
 import com.MateuszW.aigrowthtracker.BuildConfig
+import androidx.core.content.edit
 
 class TaskViewModel(
     private val taskDao: TaskDao,
@@ -70,6 +71,9 @@ class TaskViewModel(
     val accountCreatedAt = System.currentTimeMillis()
     private val _aiTaskSuggestion = MutableStateFlow<String?>(null)
     val aiTaskSuggestion: StateFlow<String?> = _aiTaskSuggestion
+
+
+
 
     //zapis zadan do bazy
     fun saveTask(task: TaskEntity) {
@@ -254,5 +258,47 @@ class TaskViewModel(
         cal.set(Calendar.SECOND, 0)
         cal.set(Calendar.MILLISECOND, 0)
         return cal.timeInMillis
+    }
+
+    fun toggleWeekends(context: Context, value: Boolean) {
+        showWeekends.value = value
+        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            .edit {
+                putBoolean("show_weekends", value)
+            }
+    }
+
+    fun toggleHolidays(context: Context, value: Boolean) {
+        showHolidays.value = value
+        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            .edit {
+                putBoolean("show_holidays", value)
+            }
+    }
+
+    fun saveApiKey(context: Context, key: String) {
+        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            .edit {
+                putString("holiday_api_key", key)
+            }
+    }
+
+    fun deleteAllTasks() {
+        viewModelScope.launch {
+            taskDao.deleteAllTasks()
+        }
+    }
+
+    fun deleteTask(task: TaskEntity) {
+        viewModelScope.launch {
+            taskDao.deleteTask(task)
+            taskHistoryDao.deleteHistoryForTask(task.id)
+        }
+    }
+
+    fun updateTask(task: TaskEntity) {
+        viewModelScope.launch {
+            taskDao.updateTask(task)
+        }
     }
 }

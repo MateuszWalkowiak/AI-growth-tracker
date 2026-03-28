@@ -59,8 +59,6 @@ fun DayDetailsScreen(
     val completed = history.count { it.completed }
     val progress = completed.toFloat() / dailyGoal
 
-    val animatedProgress by animateFloatAsState(progress)
-
     Scaffold(
         topBar = {
             TopAppBar(

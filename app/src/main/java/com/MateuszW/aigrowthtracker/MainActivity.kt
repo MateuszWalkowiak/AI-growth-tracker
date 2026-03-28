@@ -118,7 +118,8 @@ class MainActivity : ComponentActivity() {
                             onStatsClick = { navController.navigate("stats_screen") },
                             onDayClick = { day ->
                                 navController.navigate("day_details/$day")
-                            }
+                            },
+                            onSettingsClick = { navController.navigate("settings_screen") }
                         )
                     }
                     composable("add_task_screen") {
@@ -185,6 +186,13 @@ class MainActivity : ComponentActivity() {
                         DayDetailsScreen(
                             history = history,
                             dailyGoal = 5,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable("settings_screen") {
+                        SettingsScreen(
+                            viewModel = viewModel,
                             onBack = { navController.popBackStack() }
                         )
                     }
