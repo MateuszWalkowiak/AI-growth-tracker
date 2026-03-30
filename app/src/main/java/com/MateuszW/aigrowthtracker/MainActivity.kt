@@ -90,10 +90,6 @@ class MainActivity : ComponentActivity() {
                 }
                 val viewModel: TaskViewModel = viewModel(factory = factory)
 
-                LaunchedEffect(Unit) {
-                    viewModel.loadHolidays()//zczytanie swiat z zewnetrznego API
-                }
-
                 val navController = rememberNavController()
 
                 val accountCreationDateState = remember { mutableStateOf<Long?>(null) }
@@ -105,11 +101,14 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-
-
                 NavHost(navController = navController, startDestination = "main_screen") {
 
                     composable("main_screen") {
+                        val context = LocalContext.current
+                        LaunchedEffect(Unit) {
+                            viewModel.loadSettingsSmart(context)
+                        }
+
                         val tasks by viewModel.allTasks.collectAsState(initial = emptyList())
                         val activeTask by viewModel.activeTask.collectAsState()
                         val remainingTime by viewModel.remainingTime.collectAsState()
@@ -185,7 +184,10 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("task_details/{taskId}") { backStackEntry ->
                         val taskId = backStackEntry.arguments?.getString("taskId")!!.toInt()
-                        val history by viewModel.getTaskHistory(taskId).collectAsState()
+                        val historyFlow = remember(taskId) {
+                            viewModel.getTaskHistory(taskId)
+                        }
+                        val history by historyFlow.collectAsState()
 
                         TaskDetailsScreen(
                             history = history,
@@ -196,7 +198,10 @@ class MainActivity : ComponentActivity() {
 
                         val day = backStackEntry.arguments?.getString("day")!!.toLong()
 
-                        val history by viewModel.getHistoryForDay(day).collectAsState()
+                        val historyFlow = remember(day) {
+                            viewModel.getHistoryForDay(day)
+                        }
+                        val history by historyFlow.collectAsState()
 
                         DayDetailsScreen(
                             history = history,

@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 
@@ -44,8 +45,11 @@ fun MainScreen(
     activeTask: TaskEntity?,
     remainingTime: Int
 ) {
+    val context = LocalContext.current
+
     LaunchedEffect(Unit) {
         viewModel.syncFromFirebase()
+        viewModel.loadHolidaysSmart(context)
     }
 
 

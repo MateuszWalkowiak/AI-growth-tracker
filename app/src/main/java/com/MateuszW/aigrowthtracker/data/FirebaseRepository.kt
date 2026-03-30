@@ -5,3 +5,4 @@ import com.google.firebase.firestore.FirebaseFirestore
 object FirebaseRepository {
     val db = FirebaseFirestore.getInstance()
 }
+

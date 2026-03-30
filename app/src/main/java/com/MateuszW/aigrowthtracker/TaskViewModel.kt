@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import android.content.Context
+import android.util.Log
 import com.MateuszW.aigrowthtracker.data.TaskSummary
 import androidx.compose.runtime.mutableStateOf
 import java.text.SimpleDateFormat
@@ -44,18 +45,12 @@ class TaskViewModel(
     val showHolidays = mutableStateOf(true)
     val showWeekends = mutableStateOf(true)
 
-    init {
-        if (holidays.value.isEmpty()) {
-            loadHolidays()
-        }
-    }
-
     val taskSummaries: StateFlow<List<TaskSummary>> =
         taskHistoryDao.getTaskSummaries()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val history: StateFlow<List<TaskHistoryEntity>> =
         taskHistoryDao.getAllHistory()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _activeTask = MutableStateFlow<TaskEntity?>(null)
     val activeTask: StateFlow<TaskEntity?> = _activeTask
@@ -63,14 +58,14 @@ class TaskViewModel(
     private val _remainingTime = MutableStateFlow(0)
     val remainingTime: StateFlow<Int> = _remainingTime
     val allTasks: StateFlow<List<TaskEntity>> = taskDao.getAllTasks()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(10000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val existingCategories: StateFlow<List<String>> = taskDao.getUniqueCategories()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val completedDates: StateFlow<List<Long>> =
         taskHistoryDao.getCompletedDates()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val accountCreatedAt = System.currentTimeMillis()
     private val _aiTaskSuggestion = MutableStateFlow<String?>(null)
@@ -189,7 +184,7 @@ class TaskViewModel(
     }
     fun getTaskHistory(taskId: Int): StateFlow<List<TaskHistoryEntity>> =
         taskHistoryDao.getHistoryForTask(taskId)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun dayStart(time: Long): Long {
         val cal = java.util.Calendar.getInstance()
@@ -207,50 +202,52 @@ class TaskViewModel(
         val end = start + 86400000
 
         return taskHistoryDao.getHistoryForDay(start, end)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     }
 
-    fun loadHolidays() {
-        viewModelScope.launch {
-            try {
-                val holidaysResponse = holidayService.getHolidays(
-                    key = BuildConfig.HOLIDAY_API_KEY,
-                    year = Calendar.getInstance().get(Calendar.YEAR)
-                )
+    suspend fun fetchFromApi(key: String): List<Long> {
+        return try {
+            val response = holidayService.getHolidays(
+                key = key,
+                year = Calendar.getInstance().get(Calendar.YEAR)
+            )
 
-                val parsed = holidaysResponse.response.holidays
-                    //filtrowanie swiat
-                    .filter { holiday ->
+            response.response.holidays
+                .filter { holiday ->
 
-                        val types = holiday.type
+                    val name = holiday.name.lowercase()
 
-                        val isRealHoliday =
-                            types.contains("National holiday") ||
-                                    types.contains("Public holiday")
+                    val isImportantByName =
+                        name.contains("easter") ||
+                                name.contains("christmas") ||
+                                name.contains("new year's eve") ||
+                                name.contains("new year") ||
+                                name.contains("all saints") ||
+                                name.contains("independence") ||
+                                name.contains("constitution")
 
-                        val isImportantFallback =
-                            holiday.name.contains("Easter", ignoreCase = true) ||
-                                    holiday.name.contains("Christmas", ignoreCase = true) ||
-                                    holiday.name.contains("New Year", ignoreCase = true) ||
-                                    holiday.name.contains("Wielkanoc", ignoreCase = true) ||
-                                    holiday.name.contains("Boże Narodzenie", ignoreCase = true) ||
-                                    holiday.name.contains("Sylwester", ignoreCase = true)
+                    val isImportantByType =
+                        holiday.type.contains("National holiday") ||
+                                holiday.type.contains("Christian")
 
-                        isRealHoliday || isImportantFallback
-                    }
-                    .map { holiday ->
-                        normalizeDay(
-                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                                .parse(holiday.date.iso)!!
-                                .time
-                        )
-                    }
+                    val isPolishNames =
+                        name.contains("boże narodzenie") ||
+                                name.contains("wielkanoc") ||
+                                name.contains("sylwester") ||
+                                name.contains("nowy rok")
 
-                holidays.value = parsed
+                    isImportantByName || isImportantByType || isPolishNames
+                }
+                .map {
+                    normalizeDay(
+                        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            .parse(it.date.iso)!!.time
+                    )
+                }
 
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        } catch (e: Exception) {
+            Log.e("API", "FETCH ERROR: ${e.message}")
+            emptyList()
         }
     }
 
@@ -297,10 +294,8 @@ class TaskViewModel(
     fun toggleWeekends(context: Context, value: Boolean) {
         showWeekends.value = value
 
-        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean("show_weekends", value)
-            .apply()
+        val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        prefs.edit { putBoolean("show_weekends", value) }
 
         saveSettingsToFirebase(context)
     }
@@ -308,10 +303,8 @@ class TaskViewModel(
     fun toggleHolidays(context: Context, value: Boolean) {
         showHolidays.value = value
 
-        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean("show_holidays", value)
-            .apply()
+        val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        prefs.edit { putBoolean("show_holidays", value) }
 
         saveSettingsToFirebase(context)
     }
@@ -361,8 +354,7 @@ class TaskViewModel(
 
         val data = mapOf(
             "showWeekends" to prefs.getBoolean("show_weekends", true),
-            "showHolidays" to prefs.getBoolean("show_holidays", true),
-            "apiKey" to prefs.getString("holiday_api_key", "")
+            "showHolidays" to prefs.getBoolean("show_holidays", true)
         )
 
         FirebaseRepository.db
@@ -397,6 +389,130 @@ class TaskViewModel(
                 )
 
                 taskDao.insertTask(task)
+            }
+        }
+    }
+
+    fun saveHolidaysLocally(context: Context, list: List<Long>) {
+        val prefs = context.getSharedPreferences("holidays", Context.MODE_PRIVATE)
+        prefs.edit { putString("data", list.joinToString(",")) }
+    }
+
+    fun loadHolidaysFromLocal(context: Context): List<Long> {
+        val prefs = context.getSharedPreferences("holidays", Context.MODE_PRIVATE)
+        val data = prefs.getString("data", "") ?: ""
+        return if (data.isEmpty()) emptyList()
+        else data.split(",").map { it.toLong() }
+    }
+
+    suspend fun loadHolidaysFromFirebase(): List<Long> {
+        val userId = AuthManager.getUserId() ?: return emptyList()
+
+        val doc = FirebaseRepository.db
+            .collection("users")
+            .document(userId)
+            .collection("holidays")
+            .document("current")
+            .get()
+            .await()
+
+        val list = (doc.get("data") as? List<*>)?.mapNotNull {
+            (it as? Number)?.toLong()
+        } ?: emptyList()
+        return list
+    }
+
+    fun saveHolidaysToFirebase(list: List<Long>) {
+        val userId = AuthManager.getUserId() ?: return
+
+        FirebaseRepository.db
+            .collection("users")
+            .document(userId)
+            .collection("holidays")
+            .document("current")
+            .set(mapOf("data" to list))
+    }
+
+    fun onApiKeyConfirmed(context: Context, key: String) {
+        if (key.isBlank()) {
+            Log.e("API", "EMPTY API KEY")
+            return
+        }
+        saveApiKey(context, key)
+        loadHolidaysSmart(context)
+    }
+
+    fun loadHolidaysSmart(context: Context) {
+        viewModelScope.launch {
+
+            //pobierz liste swiat z lokalnej bazy
+            val local = loadHolidaysFromLocal(context)
+
+            if (local.isNotEmpty()) {
+                holidays.value = local
+                return@launch
+            }
+
+            //pobierz liste swiat z zewnetrznej bazy
+            val remote = loadHolidaysFromFirebase()
+
+            if (remote.isNotEmpty()) {
+                holidays.value = remote
+                saveHolidaysLocally(context, remote)
+                return@launch
+            }
+
+            //pobierz liste swiat z calendarific
+            val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            val apiKey = prefs.getString("holiday_api_key", "") ?: ""
+
+            if (apiKey.isNotBlank()) {
+                val api = fetchFromApi(apiKey)
+
+                holidays.value = api
+                saveHolidaysLocally(context, api)
+                saveHolidaysToFirebase(api)
+            }
+        }
+    }
+
+    fun loadSettingsSmart(context: Context) {
+        viewModelScope.launch {
+
+            val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+
+            val localWeekends = prefs.getBoolean("show_weekends", false)
+            val localHolidays = prefs.getBoolean("show_holidays", false)
+
+            showWeekends.value = localWeekends
+            showHolidays.value = localHolidays
+
+            val isFirstRun = !prefs.contains("show_weekends") || !prefs.contains("show_holidays")
+
+            if (isFirstRun) {
+                val userId = AuthManager.getUserId() ?: return@launch
+
+                val doc = FirebaseRepository.db
+                    .collection("users")
+                    .document(userId)
+                    .collection("settings")
+                    .document("main")
+                    .get()
+                    .await()
+
+                val fbWeekends = doc.getBoolean("showWeekends")
+                val fbHolidays = doc.getBoolean("showHolidays")
+
+                if (fbWeekends != null && fbHolidays != null) {
+
+                    showWeekends.value = fbWeekends
+                    showHolidays.value = fbHolidays
+
+                    prefs.edit {
+                        putBoolean("show_weekends", fbWeekends)
+                            .putBoolean("show_holidays", fbHolidays)
+                    }
+                }
             }
         }
     }

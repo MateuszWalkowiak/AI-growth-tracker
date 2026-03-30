@@ -90,15 +90,53 @@ fun SettingsScreen(
 
             // miejsce do wpisywania API KEY calendarific
             if (viewModel.showHolidays.value) {
-                OutlinedTextField(
-                    value = apiKey,
-                    onValueChange = {
-                        apiKey = it
-                        viewModel.saveApiKey(context, it)
-                    },
-                    label = { Text("Wpisz swój darmowy klucz API Calendarific") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+
+                var statusMessage by remember { mutableStateOf("") }
+                var isError by remember { mutableStateOf(false) }
+                var isLoading by remember { mutableStateOf(false) }
+
+                Column {
+
+                    OutlinedTextField(
+                        value = apiKey,
+                        onValueChange = { apiKey = it },
+                        label = { Text("Wpisz swój darmowy klucz API Calendarific") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                IconButton(onClick = {
+                                    if (apiKey.isBlank()) {
+                                        statusMessage = "Wpisz API key"
+                                        isError = true
+                                        return@IconButton
+                                    }
+                                    isLoading = true
+                                    statusMessage = ""
+
+                                    viewModel.onApiKeyConfirmed(context, apiKey)
+
+                                    isLoading = false
+                                    statusMessage = "Dane świąt pobrane"
+                                    isError = false
+                                }) {
+                                    Text("OK")
+                                }
+                            }
+                        }
+                    )
+                    if (statusMessage.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = statusMessage,
+                            color = if (isError) Color.Red else Color(0xFF4CAF50)
+                        )
+                    }
+                }
             }
             //wyloguj sie
             Button(

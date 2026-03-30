@@ -130,10 +130,10 @@ fun AnimatedProgressBar(progress: Float) {
     val infiniteTransition = rememberInfiniteTransition()
 
     val offset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
+        initialValue = -300f,
+        targetValue = 1200f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = LinearEasing)
+            animation = tween(2500, easing = LinearEasing)
         )
     )
 
@@ -148,9 +148,9 @@ fun AnimatedProgressBar(progress: Float) {
 
     val time by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = 1f,
+        targetValue = 10000f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1400, easing = LinearEasing)
+            animation = tween(200000, easing = LinearEasing)
         )
     )
 
@@ -165,15 +165,36 @@ fun AnimatedProgressBar(progress: Float) {
     ) {
 
         //progres poniez 100%
+        val startColor = when {
+            baseProgress < 0.5f -> {
+                // czerwony -> pomarańczowy
+                val t = baseProgress / 0.5f
+                Color(
+                    red = 1f,
+                    green = t * 0.5f,
+                    blue = 0f
+                )
+            }
+            else -> {
+                // pomarańczowy -> zielony
+                val t = (baseProgress - 0.5f) / 0.5f
+                Color(
+                    red = 1f - t,
+                    green = 0.5f + t * 0.5f,
+                    blue = 0f
+                )
+            }
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth(baseProgress)
                 .fillMaxHeight()
                 .background(
                     Brush.horizontalGradient(
-                        listOf(
-                            Color(0.2f, 0.8f, 0.2f),
-                            Color(0.4f, 1f, 0.4f)
+                        colors = listOf(
+                            startColor.copy(alpha = 0.6f),
+                            startColor,
+                            startColor.copy(alpha = 0.9f)
                         )
                     )
                 )
@@ -243,78 +264,33 @@ fun AnimatedProgressBar(progress: Float) {
                     )
             )
 
-            Canvas(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
 
                 val barWidth = size.width * overProgress
-                val flameStart = barWidth * 0.25f
+                val startX = barWidth * 0.1f
+                val range = barWidth - startX
+
+                if (range <= 0f) return@Canvas
 
                 flames.forEach { p ->
 
-                    if (p.size < 8f) return@forEach
-                    val speed = p.speed * 0.7f
-                    val life = ((time * speed) + p.seed) % 1f
+                    val speed = (0.015f + p.speed * 0.01f)* 0.7f
 
-                    val range = (barWidth - flameStart)
+                    val progress = ((time * speed + p.seed) % 1f)
 
-                    val normalizedX = (x - flameStart) / range
-                    if (p.seed > normalizedX) return@forEach
+                    val x = startX + progress * range
 
-                    val travel = (time * speed * range * 1.5f)
-                    val base = p.seed * range
+                    val baseY = size.height * (0.3f + p.startY * 0.4f)
 
-                    val x = flameStart + ((base + travel) % range)
-                    val baseY = size.height * (0.35f + p.startY * 0.5f)
-                    val y = baseY + sin(life * 6f + p.seed * 10f) * 3f
+                    val y = baseY + sin(time + p.seed * 5f) * 1f
 
-                    val alpha = (1f - life).let { it * it } * 0.9f
-                    val scale = 0.6f + life * 0.9f
-
-                    val height = p.size * 2.2f * scale
-                    val width = p.size * 1.2f * scale
-
-                    val path = Path().apply {
-                        moveTo(x, y - height)
-                        quadraticBezierTo(
-                            x + width, y - height * 0.3f,
-                            x, y
-                        )
-                        quadraticBezierTo(
-                            x - width, y - height * 0.3f,
-                            x, y - height
-                        )
-                        close()
-                    }
-
-                    drawPath(
-                        path = path,
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color(1f, 0.5f, 0f, alpha * 0.4f),
-                                Color.Transparent
-                            )
-                        ),
-                        blendMode = BlendMode.Plus
-                    )
-
-                    drawPath(
-                        path = path,
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = alpha),
-                                Color(1f, 0.8f, 0.2f, alpha),
-                                Color(1f, 0.4f, 0f, alpha * 0.7f),
-                                Color.Transparent
-                            )
-                        )
-                    )
+                    val scale = 0.5f + progress * 0.8f
+                    val alpha = 1f - progress
 
                     drawCircle(
                         color = Color.White.copy(alpha = alpha * 0.8f),
-                        radius = p.size * 0.25f * scale,
-                        center = Offset(x, y - height * 0.4f),
-                        blendMode = BlendMode.Plus
+                        radius = p.size * scale,
+                        center = Offset(x, y)
                     )
                 }
             }
