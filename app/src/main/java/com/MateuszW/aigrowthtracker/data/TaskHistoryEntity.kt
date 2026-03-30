@@ -14,3 +14,15 @@ data class TaskHistoryEntity(
     val rating: Int? = null,
     val note: String? = null
 )
+fun TaskHistoryEntity.toMap(): Map<String, Any?> {
+    return mapOf(
+        "id" to id,
+        "taskId" to taskId,
+        "taskName" to taskName,
+        "category" to category,
+        "date" to date,
+        "completed" to completed,
+        "rating" to rating,
+        "note" to note
+    )
+}

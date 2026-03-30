@@ -23,6 +23,10 @@ import java.util.Locale
 import java.util.Calendar
 import com.MateuszW.aigrowthtracker.BuildConfig
 import androidx.core.content.edit
+import com.MateuszW.aigrowthtracker.data.AuthManager
+import com.MateuszW.aigrowthtracker.data.FirebaseRepository
+import com.MateuszW.aigrowthtracker.data.toMap
+import kotlinx.coroutines.tasks.await
 
 class TaskViewModel(
     private val taskDao: TaskDao,
@@ -78,7 +82,18 @@ class TaskViewModel(
     //zapis zadan do bazy
     fun saveTask(task: TaskEntity) {
         viewModelScope.launch {
-            taskDao.insertTask(task)
+
+            val userId = AuthManager.getUserId() ?: return@launch
+
+            val newId = taskDao.insertTask(task)
+            val newTask = task.copy(id = newId.toInt())
+
+            FirebaseRepository.db
+                .collection("users")
+                .document(userId)
+                .collection("tasks")
+                .document(newTask.id.toString())
+                .set(newTask.toMap())
         }
     }
     fun startTask(task: TaskEntity, context: Context) {
@@ -119,6 +134,13 @@ class TaskViewModel(
                 )
 
                 taskHistoryDao.insert(history)
+                val userId = AuthManager.getUserId() ?: return@launch
+
+                FirebaseRepository.db
+                    .collection("users")
+                    .document(userId)
+                    .collection("history")
+                    .add(history.toMap())
             }
         }
         _activeTask.value = null
@@ -148,6 +170,18 @@ class TaskViewModel(
                 )
 
                 taskHistoryDao.insert(history)
+
+                val userId = AuthManager.getUserId()
+
+                if (userId == null) {
+                    return@launch
+                }
+
+                FirebaseRepository.db
+                    .collection("users")
+                    .document(userId)
+                    .collection("history")
+                    .add(history.toMap())
             }
         }
 
@@ -262,18 +296,24 @@ class TaskViewModel(
 
     fun toggleWeekends(context: Context, value: Boolean) {
         showWeekends.value = value
+
         context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            .edit {
-                putBoolean("show_weekends", value)
-            }
+            .edit()
+            .putBoolean("show_weekends", value)
+            .apply()
+
+        saveSettingsToFirebase(context)
     }
 
     fun toggleHolidays(context: Context, value: Boolean) {
         showHolidays.value = value
+
         context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            .edit {
-                putBoolean("show_holidays", value)
-            }
+            .edit()
+            .putBoolean("show_holidays", value)
+            .apply()
+
+        saveSettingsToFirebase(context)
     }
 
     fun saveApiKey(context: Context, key: String) {
@@ -283,22 +323,82 @@ class TaskViewModel(
             }
     }
 
-    fun deleteAllTasks() {
-        viewModelScope.launch {
-            taskDao.deleteAllTasks()
-        }
-    }
 
     fun deleteTask(task: TaskEntity) {
         viewModelScope.launch {
             taskDao.deleteTask(task)
             taskHistoryDao.deleteHistoryForTask(task.id)
+
+            val userId = AuthManager.getUserId() ?: return@launch
+
+            FirebaseRepository.db
+                .collection("users")
+                .document(userId)
+                .collection("tasks")
+                .document(task.id.toString())
+                .delete()
         }
     }
 
     fun updateTask(task: TaskEntity) {
         viewModelScope.launch {
             taskDao.updateTask(task)
+
+            val userId = AuthManager.getUserId() ?: return@launch
+
+            FirebaseRepository.db
+                .collection("users")
+                .document(userId)
+                .collection("tasks")
+                .document(task.id.toString())
+                .set(task.toMap())
         }
     }
+    fun saveSettingsToFirebase(context: Context) {
+        val userId = AuthManager.getUserId() ?: return
+
+        val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+
+        val data = mapOf(
+            "showWeekends" to prefs.getBoolean("show_weekends", true),
+            "showHolidays" to prefs.getBoolean("show_holidays", true),
+            "apiKey" to prefs.getString("holiday_api_key", "")
+        )
+
+        FirebaseRepository.db
+            .collection("users")
+            .document(userId)
+            .collection("settings")
+            .document("main")
+            .set(data)
+    }
+
+    fun syncFromFirebase() {
+        viewModelScope.launch {
+
+            val userId = AuthManager.getUserId() ?: return@launch
+
+            val tasksSnapshot = FirebaseRepository.db
+                .collection("users")
+                .document(userId)
+                .collection("tasks")
+                .get()
+                .await()
+
+            tasksSnapshot.documents.forEach { doc ->
+                val task = TaskEntity(
+                    id = doc.getLong("id")?.toInt() ?: 0,
+                    category = doc.getString("category") ?: "",
+                    taskName = doc.getString("taskName") ?: "",
+                    durationMinutes = doc.getLong("durationMinutes")?.toInt() ?: 0,
+                    isMandatory = doc.getBoolean("isMandatory") ?: false,
+                    isAIGenerated = doc.getBoolean("isAIGenerated") ?: false,
+                    isCompleted = doc.getBoolean("isCompleted") ?: false
+                )
+
+                taskDao.insertTask(task)
+            }
+        }
+    }
+
 }

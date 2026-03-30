@@ -20,4 +20,17 @@ data class TaskEntity(
     val aiCurrentLevel: String? = null,
     val aiGoals: String? = null,
     val isCompleted: Boolean = false
+
 )
+
+fun TaskEntity.toMap(): Map<String, Any?> {
+    return mapOf(
+        "id" to id,
+        "taskName" to taskName,
+        "category" to category,
+        "durationMinutes" to durationMinutes,
+        "isMandatory" to isMandatory,
+        "isAIGenerated" to isAIGenerated,
+        "isCompleted" to isCompleted
+    )
+}

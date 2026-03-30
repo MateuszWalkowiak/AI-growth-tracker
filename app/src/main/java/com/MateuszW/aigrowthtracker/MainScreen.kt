@@ -22,11 +22,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    viewModel: TaskViewModel,
     tasks: List<TaskEntity>,
     dailyGoal: Int,
     completedDates: List<Long>,
@@ -41,6 +44,9 @@ fun MainScreen(
     activeTask: TaskEntity?,
     remainingTime: Int
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.syncFromFirebase()
+    }
 
 
     val completedTasks = tasks.count { it.isCompleted }

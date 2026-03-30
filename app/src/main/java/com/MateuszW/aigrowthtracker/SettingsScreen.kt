@@ -27,7 +27,8 @@ import androidx.compose.material.icons.filled.Schedule
 @Composable
 fun SettingsScreen(
     viewModel: TaskViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onLogout: () -> Unit
 ) {
 
     val categories by viewModel.existingCategories.collectAsState(initial = emptyList())
@@ -99,6 +100,18 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+            //wyloguj sie
+            Button(
+                onClick = {
+                    onLogout()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Wyloguj się", color = Color.White)
+            }
 
             Divider()
             Row(
@@ -114,7 +127,7 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Modyfikuj zadanie",
+                    "Modyfikuj zadania",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f)
                 )

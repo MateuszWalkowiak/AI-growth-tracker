@@ -26,6 +26,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.MateuszW.aigrowthtracker.data.AuthManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,6 +46,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MaterialTheme {
+                var user by remember { mutableStateOf(AuthManager.auth.currentUser) }
+
+                LaunchedEffect(Unit) {
+                    AuthManager.auth.addAuthStateListener { firebaseAuth ->
+                        user = firebaseAuth.currentUser
+                    }
+                }
+
+                if (user == null) {
+                    LoginScreen()
+                    return@MaterialTheme
+                }
                 val context = LocalContext.current
                 val db = remember { AppDatabase.getDatabase(context) }
                 LaunchedEffect(Unit) {
@@ -105,6 +119,7 @@ class MainActivity : ComponentActivity() {
                         val showWeekends by viewModel.showWeekends
 
                         MainScreen(
+                            viewModel = viewModel,
                             tasks = tasks,
                             activeTask = activeTask,
                             remainingTime = remainingTime,
@@ -193,7 +208,10 @@ class MainActivity : ComponentActivity() {
                     composable("settings_screen") {
                         SettingsScreen(
                             viewModel = viewModel,
-                            onBack = { navController.popBackStack() }
+                            onBack = { navController.popBackStack() },
+                            onLogout = {
+                                AuthManager.auth.signOut()
+                            }
                         )
                     }
                 }
