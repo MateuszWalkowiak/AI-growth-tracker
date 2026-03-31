@@ -23,6 +23,23 @@ data class TaskEntity(
 
 )
 
+enum class WeeklyTaskType {
+    COUNTER,
+    MILESTONE
+}
+
+data class WeeklyTaskEntity(
+    val id: Int = 0,
+    val name: String,
+    val type: WeeklyTaskType,
+
+    val targetValue: Float, 
+    val currentValue: Float = 0f,
+
+    val step: Float = 1f,
+    val isAIGenerated: Boolean = false
+)
+
 fun TaskEntity.toMap(): Map<String, Any?> {
     return mapOf(
         "id" to id,

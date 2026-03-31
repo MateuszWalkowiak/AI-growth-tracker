@@ -26,12 +26,17 @@ import com.MateuszW.aigrowthtracker.BuildConfig
 import androidx.core.content.edit
 import com.MateuszW.aigrowthtracker.data.AuthManager
 import com.MateuszW.aigrowthtracker.data.FirebaseRepository
+import com.MateuszW.aigrowthtracker.data.WeeklyTaskDb
+import com.MateuszW.aigrowthtracker.data.WeeklyTaskEntity
+import com.MateuszW.aigrowthtracker.data.WeeklyTaskType
 import com.MateuszW.aigrowthtracker.data.toMap
 import kotlinx.coroutines.tasks.await
+import com.MateuszW.aigrowthtracker.data.WeeklyTaskDao
 
 class TaskViewModel(
     private val taskDao: TaskDao,
     private val taskHistoryDao: TaskHistoryDao,
+    private val weeklyTaskDao: WeeklyTaskDao
 ) : ViewModel() {
     private var timerJob: kotlinx.coroutines.Job? = null
     private val retrofit = Retrofit.Builder()
@@ -70,6 +75,19 @@ class TaskViewModel(
     val accountCreatedAt = System.currentTimeMillis()
     private val _aiTaskSuggestion = MutableStateFlow<String?>(null)
     val aiTaskSuggestion: StateFlow<String?> = _aiTaskSuggestion
+
+    private val _weeklyTasks = MutableStateFlow<List<WeeklyTaskEntity>>(emptyList())
+    val weeklyTasks: StateFlow<List<WeeklyTaskEntity>> = _weeklyTasks
+
+    private val _weekPlanned = MutableStateFlow(false)
+    val weekPlanned: StateFlow<Boolean> = _weekPlanned
+
+    private val _aiDailyTasks = MutableStateFlow<List<String>>(emptyList())
+    val aiDailyTasks: StateFlow<List<String>> = _aiDailyTasks
+
+    fun setAiDailyTasks(tasks: List<String>) {
+        _aiDailyTasks.value = tasks
+    }
 
 
 
@@ -422,6 +440,43 @@ class TaskViewModel(
         return list
     }
 
+    suspend fun loadWeeklyFromLocal(): List<WeeklyTaskEntity> {
+        return weeklyTaskDao.getAll().map {
+            WeeklyTaskEntity(
+                id = it.id,
+                name = it.name,
+                type = WeeklyTaskType.valueOf(it.type),
+                targetValue = it.targetValue,
+                currentValue = it.currentValue,
+                step = it.step,
+                isAIGenerated = it.isAIGenerated
+            )
+        }
+    }
+
+    suspend fun loadWeeklyFromFirebase(): List<WeeklyTaskEntity> {
+        val userId = AuthManager.getUserId() ?: return emptyList()
+
+        val snapshot = FirebaseRepository.db
+            .collection("users")
+            .document(userId)
+            .collection("weekly_tasks")
+            .get()
+            .await()
+
+        return snapshot.documents.map {
+            WeeklyTaskEntity(
+                id = it.getLong("id")?.toInt() ?: 0,
+                name = it.getString("name") ?: "",
+                type = WeeklyTaskType.valueOf(it.getString("type") ?: "COUNTER"),
+                targetValue = it.getDouble("targetValue")?.toFloat() ?: 0f,
+                currentValue = it.getDouble("currentValue")?.toFloat() ?: 0f,
+                step = it.getDouble("step")?.toFloat() ?: 1f,
+                isAIGenerated = it.getBoolean("isAIGenerated") ?: false
+            )
+        }
+    }
+
     fun saveHolidaysToFirebase(list: List<Long>) {
         val userId = AuthManager.getUserId() ?: return
 
@@ -514,6 +569,104 @@ class TaskViewModel(
                     }
                 }
             }
+        }
+    }
+
+    fun setWeeklyTasks(tasks: List<WeeklyTaskEntity>) {
+        _weeklyTasks.value = tasks
+        _weekPlanned.value = true
+    }
+
+    fun incrementWeeklyTask(id: Int) {
+        _weeklyTasks.value = _weeklyTasks.value.map {
+            if (it.id == id) it.copy(currentValue = it.currentValue + it.step)
+            else it
+        }
+    }
+
+    fun decrementWeeklyTask(id: Int) {
+        _weeklyTasks.value = _weeklyTasks.value.map {
+            if (it.id == id) it.copy(currentValue = (it.currentValue - it.step).coerceAtLeast(0f))
+            else it
+        }
+    }
+
+    fun createWeeklyTasks(
+        difficulty: Int,
+        goals: Map<String, String>
+    ) {
+        val tasks = goals.entries.mapIndexed { index, entry ->
+            val name = entry.key
+            val goal = entry.value
+
+            WeeklyTaskEntity(
+                id = index,
+                name = name,
+                type = WeeklyTaskType.COUNTER,
+                targetValue = difficulty.toFloat(),
+                step = 1f,
+                isAIGenerated = false
+            )
+        }
+
+        _weeklyTasks.value = tasks
+        _weekPlanned.value = true
+    }
+
+    fun checkNextWeekHolidays(): Boolean {
+        val nextWeek = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, 7)
+        }.timeInMillis
+
+        return holidays.value.any { it >= nextWeek }
+    }
+
+    fun WeeklyTaskEntity.toMap(): Map<String, Any> {
+        return mapOf(
+            "id" to id,
+            "name" to name,
+            "type" to type.name,
+            "targetValue" to targetValue,
+            "currentValue" to currentValue,
+            "step" to step,
+            "isAIGenerated" to isAIGenerated
+        )
+    }
+
+    fun saveWeeklyTasksToFirebase() {
+        viewModelScope.launch {
+
+            val userId = AuthManager.getUserId() ?: return@launch
+
+            _weeklyTasks.value.forEach { task ->
+
+                FirebaseRepository.db
+                    .collection("users")
+                    .document(userId)
+                    .collection("weekly_tasks")
+                    .document(task.id.toString())
+                    .set(task.toMap())
+            }
+        }
+    }
+
+    fun saveWeeklyTasksLocal() {
+        viewModelScope.launch {
+
+            val dbTasks = _weeklyTasks.value.map {
+                WeeklyTaskDb(
+                    id = it.id,
+                    name = it.name,
+                    type = it.type.name,
+                    targetValue = it.targetValue,
+                    currentValue = it.currentValue,
+                    step = it.step,
+                    isAIGenerated = it.isAIGenerated
+                )
+            }
+
+            weeklyTaskDao.clearAll()
+            weeklyTaskDao.insertAll(dbTasks)
         }
     }
 

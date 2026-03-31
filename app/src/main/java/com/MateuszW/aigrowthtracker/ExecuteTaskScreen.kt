@@ -13,10 +13,14 @@ import kotlin.random.Random
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
+import com.MateuszW.aigrowthtracker.data.WeeklyTaskEntity
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExecuteTaskScreen(
     tasks: List<TaskEntity>,
+    weeklyTasks: List<WeeklyTaskEntity>,
+    weekPlanned: Boolean,
     activeTask: TaskEntity?,
     remainingTime: Int,
     onStartTask: (TaskEntity, android.content.Context) -> Unit,
@@ -24,6 +28,9 @@ fun ExecuteTaskScreen(
     onCancelTask: () -> Unit,
     onBack: () -> Unit,
     onFinishTaskWithSummary: (Int, String) -> Unit,
+    onIncrementWeekly: (Int) -> Unit,
+    onDecrementWeekly: (Int) -> Unit,
+    onPlanWeek: () -> Unit
 ) {
     var selectedCategoryForRoll by remember { mutableStateOf("Wszystkie") }
     val categories = listOf("Wszystkie") + tasks.map { it.category }.distinct()
@@ -37,6 +44,49 @@ fun ExecuteTaskScreen(
         topBar = { TopAppBar(title = { Text("Wykonaj zadanie") }) }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp)) {
+            //sekcja zadan tygodniowych
+            Text("Zadania tygodniowe", style = MaterialTheme.typography.titleMedium)
+
+            if (!weekPlanned) {
+                Button(
+                    onClick = onPlanWeek,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                ) {
+                    Text("Pozwól asystentowi zaplanować tydzień")
+                }
+            }
+
+            weeklyTasks.forEach { task ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                ) {
+                    Column(Modifier.padding(12.dp)) {
+
+                        Text(task.name)
+
+                        val progress = (task.currentValue / task.targetValue).coerceIn(0f, 1f)
+
+                        LinearProgressIndicator(
+                            progress = progress,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Text("${task.currentValue} / ${task.targetValue}")
+
+                        Row {
+                            Button(onClick = { onIncrementWeekly(task.id) }) {
+                                Text("+")
+                            }
+                            Spacer(Modifier.width(8.dp))
+                            Button(onClick = { onDecrementWeekly(task.id) }) {
+                                Text("-")
+                            }
+                        }
+                    }
+                }
+            }
 
             //sekcja losowania
             Card(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {

@@ -45,13 +45,15 @@ import kotlin.math.sin
 import kotlin.random.Random
 import androidx.compose.foundation.Canvas
 import android.R.attr.x
-
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DayDetailsScreen(
     history: List<TaskHistoryEntity>,
+    aiTasks: List<String>,
     dailyGoal: Int,
     onBack: () -> Unit
 ) {
@@ -84,6 +86,33 @@ fun DayDetailsScreen(
             Text("$completed / $dailyGoal")
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            if (aiTasks.isEmpty()) {
+                Text("Brak zadań od asystenta")
+            } else {
+                Text("Zadania od asystenta")
+                aiTasks.forEachIndexed { index, task ->
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            Text("AI Task ${index + 1}")
+                            Text(task)
+
+                            Button(onClick = {
+                                // TO DO: obsługa wykonania taska
+                            }) {
+                                Text("Wykonaj")
+                            }
+                        }
+                    }
+                }
+            }
 
             LazyColumn {
                 items(history) { task ->
