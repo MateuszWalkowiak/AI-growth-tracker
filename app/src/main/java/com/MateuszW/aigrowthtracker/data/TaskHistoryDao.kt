@@ -2,8 +2,10 @@ package com.MateuszW.aigrowthtracker.data
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
+import androidx.room.Update
 
 @Dao
 interface TaskHistoryDao {
@@ -48,4 +50,23 @@ interface TaskHistoryDao {
 
     @Query("DELETE FROM task_history WHERE taskId = :taskId")
     suspend fun deleteHistoryForTask(taskId: Int)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(history: List<TaskHistoryEntity>)
+
+    @Update
+    suspend fun update(history: TaskHistoryEntity)
+
+    @Query("""
+        SELECT * FROM task_history
+        WHERE date BETWEEN :start AND :end
+        ORDER BY date DESC
+    """)
+    suspend fun getHistoryBetween(start: Long, end: Long): List<TaskHistoryEntity>
+
+    @Query("DELETE FROM task_history WHERE id = :id")
+    suspend fun deleteById(id: Int)
+
+    @Query("DELETE FROM task_history")
+    suspend fun deleteAll()
 }

@@ -3,13 +3,14 @@ package com.MateuszW.aigrowthtracker
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.MateuszW.aigrowthtracker.data.TaskEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,11 +27,13 @@ fun AddTaskScreen(
     }
 
     val predefinedTasks = mapOf(
-        "Sport" to listOf("Bieganie (Śledzenie GPS)", "Siłownia", "Joga", "Inne"),
-        "Umysł" to listOf("Zadania szachowe (Pobrane z lichess.com)", "Czytanie książki", "Programowanie", "Inne"),
-        "Zdrowie" to listOf("Sen", "Spacer", "Medytacja", "Inne"),
+        "Sport" to listOf("Bieganie (Śledzenie GPS)", "Krokomierz (Licznik kroków)", "Siłownia", "Joga", "Rower", "Pływanie", "Inne"),
+        "Umysł" to listOf("Zadania szachowe", "Czytanie książki", "Programowanie", "Inne"),
+        "Zdrowie" to listOf("Bieganie (Śledzenie GPS)", "Krokomierz (Licznik kroków)", "Sen", "Spacer", "Medytacja", "Inne"),
         "Kreatywność" to listOf("Rysowanie", "Gra na instrumencie", "Pisanie dziennika", "Inne")
     )
+
+    val autoStepTasks = setOf("Krokomierz (Licznik kroków)")
 
     var categoryExpanded by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf(defaultCategories[0]) }
@@ -52,10 +55,29 @@ fun AddTaskScreen(
     var currentLevel by remember { mutableStateOf("") }
     var goals by remember { mutableStateOf("") }
 
+    // ── Śledzenie kroków ───────────────────────────────────────────────────
+    var isStepTracking by remember { mutableStateOf(selectedTask in autoStepTasks) }
+    var stepGoalFloat by remember { mutableFloatStateOf(10000f) }
+
+    // ── Bieganie (GPS) ───────────────────────────────────────────────────
+    val isRunningSelected = selectedTask.contains("bieganie", ignoreCase = true)
+    var runningGoalType by remember { mutableStateOf("TIME") } // "TIME" or "KM"
+    var targetKmValue by remember { mutableFloatStateOf(5f) }
+
+    // Auto-włącz śledzenie kroków gdy wybrano predefined task
+    LaunchedEffect(selectedTask) {
+        isStepTracking = selectedTask in autoStepTasks
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Dodaj nowe zadanie") },
+                navigationIcon = {
+                    IconButton(onClick = onCancelClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Powrot")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             )
         }
@@ -64,6 +86,7 @@ fun AddTaskScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .navigationBarsPadding()
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -80,7 +103,7 @@ fun AddTaskScreen(
                     readOnly = true,
                     label = { Text("Kategoria") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth()
                 )
                 ExposedDropdownMenu(
                     expanded = categoryExpanded,
@@ -93,6 +116,7 @@ fun AddTaskScreen(
                                 selectedCategory = category
                                 categoryExpanded = false
                                 selectedTask = predefinedTasks[category]?.get(0) ?: "Inne"
+                                isStepTracking = selectedTask in autoStepTasks
                             }
                         )
                     }
@@ -108,7 +132,7 @@ fun AddTaskScreen(
                 )
             }
 
-            //nazwa zadnia
+            //nazwa zadania
             ExposedDropdownMenuBox(
                 expanded = taskExpanded,
                 onExpandedChange = { taskExpanded = !taskExpanded }
@@ -119,7 +143,7 @@ fun AddTaskScreen(
                     readOnly = true,
                     label = { Text("Zadanie") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = taskExpanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth()
                 )
                 ExposedDropdownMenu(
                     expanded = taskExpanded,
@@ -131,6 +155,7 @@ fun AddTaskScreen(
                             onClick = {
                                 selectedTask = task
                                 taskExpanded = false
+                                isStepTracking = task in autoStepTasks
                             }
                         )
                     }
@@ -146,21 +171,85 @@ fun AddTaskScreen(
                 )
             }
 
-            Divider()
+            HorizontalDivider()
 
-            //czas na zadnie
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "Czas na zadanie: ${durationMinutes.toInt()} min",
-                    fontWeight = FontWeight.Bold
-                )
-                Slider(
-                    value = durationMinutes,
-                    onValueChange = { durationMinutes = it },
-                    valueRange = 5f..180f,
-                    steps = 34 //5-180min z korkiem 5
-                )
+            // ── Cel zadania — zależy od typu ──────────────────────────────
+            if (isRunningSelected) {
+                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Rodzaj celu biegania", fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = runningGoalType == "TIME",
+                            onClick = { runningGoalType = "TIME" },
+                            label = { Text("Czas (minuty)") }
+                        )
+                        FilterChip(
+                            selected = runningGoalType == "KM",
+                            onClick = { runningGoalType = "KM" },
+                            label = { Text("Kilometry") }
+                        )
+                    }
+                    if (runningGoalType == "TIME") {
+                        Text(
+                            text = "Czas na zadanie: ${durationMinutes.toInt()} min",
+                            fontWeight = FontWeight.Bold
+                        )
+                        Slider(
+                            value = durationMinutes,
+                            onValueChange = { durationMinutes = it },
+                            valueRange = 5f..180f,
+                            steps = 34
+                        )
+                    } else {
+                        Text(
+                            text = "Cel dystansu: %.1f km".format(targetKmValue),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Slider(
+                            value = targetKmValue,
+                            onValueChange = { targetKmValue = (kotlin.math.round(it * 2) / 2f) },
+                            valueRange = 1f..20f,
+                            steps = 37
+                        )
+                    }
+                }
+            } else if (isStepTracking) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Śledzenie kroków", fontWeight = FontWeight.Bold)
+                        Text(
+                            "Postęp z Health Connect (bez otwierania aplikacji)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Cel dzienny: ${stepGoalFloat.toInt()} kroków",
+                            fontWeight = FontWeight.Bold
+                        )
+                        Slider(
+                            value = stepGoalFloat,
+                            onValueChange = { stepGoalFloat = (it / 500f).toInt() * 500f },
+                            valueRange = 1000f..30000f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            } else {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Czas na zadanie: ${durationMinutes.toInt()} min",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Slider(
+                        value = durationMinutes,
+                        onValueChange = { durationMinutes = it },
+                        valueRange = 5f..180f,
+                        steps = 34
+                    )
+                }
             }
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("Zadanie obowiązkowe?", fontWeight = FontWeight.Bold)
                 Switch(checked = isMandatory, onCheckedChange = { isMandatory = it })
@@ -170,7 +259,6 @@ fun AddTaskScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Jak często?", style = MaterialTheme.typography.titleSmall)
 
-                //typ powtórzalności
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     FilterChip(
                         selected = recurrenceType == "DAILY",
@@ -191,7 +279,6 @@ fun AddTaskScreen(
                     )
                 }
 
-                //wybrane dni
                 if (recurrenceType == "SPECIFIC_DAYS") {
                     val daysOfWeek = listOf("Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd")
                     Text("Wybierz dni:", modifier = Modifier.padding(vertical = 8.dp))
@@ -202,7 +289,7 @@ fun AddTaskScreen(
                                 checked = isSelected,
                                 onCheckedChange = {
                                     if (isSelected) selectedDays.remove(day) else selectedDays.add(day)
-                                    recurrenceValue = selectedDays.joinToString(",") // Zapisujemy jako "Pn,Śr,Pt"
+                                    recurrenceValue = selectedDays.joinToString(",")
                                 },
                                 modifier = Modifier.size(40.dp)
                             ) {
@@ -212,7 +299,6 @@ fun AddTaskScreen(
                     }
                 }
 
-                //x razy w tygodniu
                 var timesPerWeek by remember { mutableFloatStateOf(3f) }
                 if (recurrenceType == "X_TIMES_WEEK") {
                     Text(
@@ -234,6 +320,7 @@ fun AddTaskScreen(
                     )
                 }
             }
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("Wsparcie AI", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 Switch(checked = isAIGenerated, onCheckedChange = { isAIGenerated = it })
@@ -255,16 +342,29 @@ fun AddTaskScreen(
                 }
                 Button(
                     onClick = {
+                        val finalTaskName = when {
+                            selectedTask == "Inne" || selectedCategory == "Inna" -> customTaskName
+                            else -> selectedTask
+                        }
+                        val finalDuration = when {
+                            isRunningSelected && runningGoalType == "KM" -> 0
+                            isStepTracking -> 0
+                            else -> durationMinutes.toInt()
+                        }
+                        val finalTargetKm = if (isRunningSelected && runningGoalType == "KM") targetKmValue else 0f
                         val newTask = TaskEntity(
                             category = if (selectedCategory == "Inna") customCategory else selectedCategory,
-                            taskName = if (selectedTask == "Inne") customTaskName else selectedTask,
-                            durationMinutes = durationMinutes.toInt(),
+                            taskName = finalTaskName,
+                            durationMinutes = finalDuration,
                             isMandatory = isMandatory,
                             recurrenceType = if (isMandatory) recurrenceType else null,
                             recurrenceValue = if (isMandatory) recurrenceValue else null,
                             isAIGenerated = isAIGenerated,
                             aiCurrentLevel = if (isAIGenerated) currentLevel else null,
-                            aiGoals = if (isAIGenerated) goals else null
+                            aiGoals = if (isAIGenerated) goals else null,
+                            taskType = if (isStepTracking) "STEPS" else null,
+                            stepGoal = if (isStepTracking) stepGoalFloat.toInt() else null,
+                            targetKm = finalTargetKm
                         )
                         onSaveClick(newTask)
                     },

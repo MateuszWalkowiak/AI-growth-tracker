@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AI growth tracker</string>
+    <string name="mapbox_access_token" translatable="false">TUTAJ_WKLEJ_SWOJ_MAPBOX_PUBLIC_TOKEN</string>
 </resources>

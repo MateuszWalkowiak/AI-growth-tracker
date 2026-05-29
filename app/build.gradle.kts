@@ -11,13 +11,11 @@ val localProperties = Properties().apply {
 }
 
 val apiKey = localProperties.getProperty("HOLIDAY_API_KEY") ?: ""
+val mapboxToken = localProperties.getProperty("MAPBOX_ACCESS_TOKEN") ?: ""
 android {
     namespace = "com.MateuszW.aigrowthtracker"
     compileSdk = 35
 
-    buildFeatures {
-        buildConfig = true
-    }
     defaultConfig {
         applicationId = "com.MateuszW.aigrowthtracker"
         minSdk = 26
@@ -25,6 +23,9 @@ android {
         versionCode = 1
         versionName = "1.0"
         buildConfigField("String", "HOLIDAY_API_KEY", "\"$apiKey\"")
+        buildConfigField("String", "MAPBOX_ACCESS_TOKEN", "\"$mapboxToken\"")
+        manifestPlaceholders["MAPBOX_ACCESS_TOKEN"] = mapboxToken
+        resValue("string", "mapbox_access_token", mapboxToken)
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -45,6 +46,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }
@@ -52,7 +54,6 @@ android {
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -85,4 +86,10 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.google.firebase:firebase-firestore-ktx:25.0.0")
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
+    // Mapbox
+    implementation("com.mapbox.maps:android:11.9.0")
+    implementation("com.mapbox.extension:maps-compose:11.9.0")
+    // Google Play Services Location (for FusedLocationProviderClient)
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 }

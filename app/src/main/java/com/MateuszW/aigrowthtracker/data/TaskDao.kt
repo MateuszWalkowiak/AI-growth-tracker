@@ -16,6 +16,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks_table")
     fun getAllTasks(): Flow<List<TaskEntity>>
 
+    @Query("SELECT * FROM tasks_table")
+    suspend fun getAllTasksOnce(): List<TaskEntity>
+
     @Query("SELECT DISTINCT category FROM tasks_table")
     fun getUniqueCategories(): Flow<List<String>>
 
