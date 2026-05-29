@@ -115,7 +115,3 @@ app/src/main/java/com/MateuszW/aigrowthtracker/
 ├── data/                        # Room entities, DAO, Firebase repo
 └── running/                     # Modul sledzenia biegow (GPS + Mapbox)
 ```
-
-## Licencja
-
-Projekt prywatny.
