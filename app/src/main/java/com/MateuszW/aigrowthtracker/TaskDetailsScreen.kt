@@ -120,7 +120,7 @@ fun TaskDetailsScreen(
                             )
                         }
 
-                        // Instrukcje AI zapisane przy wykonywaniu zadania
+                        //Instrukcje AI zapisane przy wykonywaniu zadania
                         item.aiInstructions?.takeIf { it.isNotBlank() }?.let { instructions ->
                             Spacer(Modifier.height(8.dp))
                             HorizontalDivider(

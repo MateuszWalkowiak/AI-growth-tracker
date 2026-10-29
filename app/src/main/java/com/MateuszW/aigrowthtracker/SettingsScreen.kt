@@ -77,7 +77,7 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ── Sekcja: Wygląd ──────────────────────────────────────────
+            //  ── Sekcja: Wygląd ──────────────────────────────────────────
             SettingsSectionHeader("Wyglad")
 
             Card(
@@ -119,7 +119,7 @@ fun SettingsScreen(
                 }
             }
 
-            // ── Sekcja: Planowanie ───────────────────────────────────────
+            //  ── Sekcja: Planowanie ───────────────────────────────────────
             SettingsSectionHeader("Planowanie")
 
             Card(
@@ -352,7 +352,7 @@ fun SettingsScreen(
                 }
             }
 
-            // ── Sekcja: Zadania ─────────────────────────────────────────
+            //── Sekcja: Zadania ─────────────────────────────────────────
             SettingsSectionHeader("Zadania")
 
             Card(
@@ -493,7 +493,7 @@ fun SettingsScreen(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+//─────────────────────────────────────────────────────────────────────────────
 // Pomocnicze komponenty
 // ─────────────────────────────────────────────────────────────────────────────
 

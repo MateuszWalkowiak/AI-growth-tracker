@@ -54,24 +54,30 @@ fun WeeklyContinuationScreen(
             )
             Spacer(Modifier.height(8.dp))
 
-            // Gradient difficulty selector
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                (1..10).forEach { level ->
-                    val color = difficultyColor(level)
-                    val isSelected = difficulty == level
-                    Button(
-                        onClick = { difficulty = level },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) color else color.copy(alpha = 0.18f),
-                            contentColor = if (isSelected) Color.White else color
-                        ),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                        modifier = Modifier.height(36.dp)
+            //  Gradient difficulty selector - 2 rzedy po 5, pelna szerokosc
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                listOf(1..5, 6..10).forEach { range ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text("$level", style = MaterialTheme.typography.labelMedium)
+                        range.forEach { level ->
+                            val color = difficultyColor(level)
+                            val isSelected = difficulty == level
+                            Button(
+                                onClick = { difficulty = level },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isSelected) color else color.copy(alpha = 0.18f),
+                                    contentColor = if (isSelected) Color.White else color
+                                ),
+                                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp)
+                            ) {
+                                Text("$level", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
                     }
                 }
             }
@@ -111,7 +117,7 @@ fun WeeklyContinuationScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // Przycisk AI – planuje tydzień i wstawia do kalendarza
+            //Przycisk AI - planuje tydzień i wstawia do kalendarza
             Button(
                 onClick = { onPlanWithAI(difficulty, drafts.toMap()) },
                 modifier = Modifier.fillMaxWidth(),
@@ -136,7 +142,7 @@ fun WeeklyContinuationScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // Przycisk bez AI – tylko zapisuje i wraca
+            // Przycisk bez AI - tylko zapisuje i wraca
             OutlinedButton(
                 onClick = { onFinish(difficulty, drafts.toMap()) },
                 modifier = Modifier.fillMaxWidth(),

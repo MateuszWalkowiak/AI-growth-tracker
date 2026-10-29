@@ -26,7 +26,7 @@ fun StatisticsScreen(
     onTaskClick: (Int) -> Unit,
     onBack: () -> Unit
 ) {
-    // ── Computed stats ──────────────────────────────────────────────────────
+    //── Computed stats ──────────────────────────────────────────────────────
     val totalTasks = history.size
     val completedTasks = history.count { it.completed }
     val completionRate = if (totalTasks > 0) completedTasks.toFloat() / totalTasks else 0f
@@ -37,7 +37,7 @@ fun StatisticsScreen(
     val ratingDistribution = (1..5).associateWith { star -> ratings.count { it == star } }
     val maxRatingCount = ratingDistribution.values.maxOrNull()?.coerceAtLeast(1) ?: 1
 
-    // Tylko pula "daily" — wykluczamy zadania wygenerowane przez AI.
+    // Tylko pula "daily" - wykluczamy zadania wygenerowane przez AI
     val bestTasks = history
         .filter { it.rating != null && !it.isAIGenerated }
         .groupBy { it.taskName }
@@ -54,7 +54,7 @@ fun StatisticsScreen(
 
     val totalByCategory = categoryStats.sumOf { it.second }.coerceAtLeast(1)
 
-    // ── Last 7 days streak ──────────────────────────────────────────────────
+    //── Last 7 days streak ──────────────────────────────────────────────────
     val cal = Calendar.getInstance()
     cal.set(Calendar.HOUR_OF_DAY, 0)
     cal.set(Calendar.MINUTE, 0)
@@ -114,7 +114,7 @@ fun StatisticsScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // Top row — two stat chips side by side
+                        //Top row - two stat chips side by side
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -159,7 +159,7 @@ fun StatisticsScreen(
                             )
                         }
 
-                        // Last 7 days
+                        //Last 7 days
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -295,7 +295,7 @@ fun StatisticsScreen(
                 }
             }
 
-            // ── Kategorie ───────────────────────────────────────────────
+            //── Kategorie ───────────────────────────────────────────────
             if (categoryStats.isNotEmpty()) {
                 item {
                     StatsSectionHeader("Kategorie")
@@ -411,8 +411,8 @@ fun StatisticsScreen(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper composables
+//  ─────────────────────────────────────────────────────────────────────────────
+//Helper composables
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable

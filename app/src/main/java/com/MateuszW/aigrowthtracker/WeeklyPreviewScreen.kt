@@ -83,7 +83,7 @@ fun WeeklyPreviewScreen(
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
 
-            // ── Avatar ──
+            //  ── Avatar ──
             item {
                 AssistantSpeechBubble(
                     painter = painterResource(R.drawable.assistant_preview),
@@ -91,7 +91,7 @@ fun WeeklyPreviewScreen(
                 )
             }
 
-            // ── Twoje zadania z puli ──
+            //── Twoje zadnaia z puli ──
             if (dailyPool.isNotEmpty()) {
                 item {
                     Column {
@@ -117,7 +117,7 @@ fun WeeklyPreviewScreen(
                 }
             }
 
-            // ── Popularne aktywności (systemowe, hardkodowane) ──
+            //── Popularne aktywności (systemowe, hardkodowane) ──
             item {
                 Column {
                     Text(
@@ -160,7 +160,7 @@ fun WeeklyPreviewScreen(
                         checked = item.checked,
                         onCheckedChange = { isChecked ->
                             customItems[index] = item.copy(checked = isChecked, isError = false)
-                            // Dodaj nowy pusty slot gdy ostatni jest zaznaczony
+                            //Dodaj nowy pusty slot gdy ostatni jest zaznaczony
                             if (isChecked && index == customItems.lastIndex) {
                                 customItems.add(CustomTaskItem())
                             }

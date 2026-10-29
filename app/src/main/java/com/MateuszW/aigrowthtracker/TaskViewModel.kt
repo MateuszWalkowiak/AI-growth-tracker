@@ -54,7 +54,7 @@ import java.time.ZoneId
 
 /**
  * Snapshot stanu Health Connect po ostatnim wywołaniu refreshTodaySteps().
- * Służy wyłącznie do diagnostyki — wyświetlany na ekranie debug.
+ * Służy wyłącznie do diagnostyki - wyświetlany na ekranie debug
  */
 data class HcDiagnostics(
     val sdkStatus: Int,                   // 3=available, 2=update required, 1=unavailable
@@ -64,9 +64,9 @@ data class HcDiagnostics(
     val startOfDay: String,
     val endTime: String,
     val zoneId: String,
-    val aggregateRawValue: Long?,         // null = brak źródła danych
+    val aggregateRawValue: Long?,         //  null = brak źródła danych
     val todayStepsAfterUpdate: Long,
-    val recordsCount: Int,                // z readRecords (gdy aggregate=null/0)
+    val recordsCount: Int,                //  z readRecords (gdy aggregate=null/0)
     val firstRecord: String?,
     val lastRecord: String?,
     val exception: String?
@@ -148,7 +148,7 @@ class TaskViewModel(
     private val _weeklyReviewSummary = MutableStateFlow<String?>(null)
     val weeklyReviewSummary: StateFlow<String?> = _weeklyReviewSummary
 
-    // "bad" | "neutral" | "great" – ocena tygodnia przez Gemini
+    // "bad" | "neutral" | "great" - ocena tygodnia przez Gemini
     private val _weekQuality = MutableStateFlow<String?>(null)
     val weekQuality: StateFlow<String?> = _weekQuality
 
@@ -157,28 +157,28 @@ class TaskViewModel(
 
     val isTestMode = mutableStateOf(false)
     val insertToSystemCalendar = mutableStateOf(false)
-    val calendarEventHour = mutableStateOf(17) // Domyślna godzina dodawania do kalendarza
+    val calendarEventHour = mutableStateOf(17) //Domyślna godzina dodawania do kalendarza
 
     private val _isPlanningWeek = MutableStateFlow(false)
     val isPlanningWeek: StateFlow<Boolean> = _isPlanningWeek
 
-    // ── Kroki (Health Connect) ──────────────────────────────────────────────
+    //  ── Kroki (Health Connect) ──────────────────────────────────────────────
     private val _todaySteps = MutableStateFlow(0L)
     val todaySteps: StateFlow<Long> = _todaySteps
 
-    // Punkt startowy kroków dla zadań STEPS uruchomionych ręcznie (taskId → baseline)
+    //  Punkt startowy kroków dla zadań STEPS uruchomionych ręcznie (taskId → baseline)
     private val _stepsBaselines = MutableStateFlow<Map<Int, Long>>(emptyMap())
     val stepsBaselines: StateFlow<Map<Int, Long>> = _stepsBaselines
 
-    // true → UI powinno poprosić użytkownika o uprawnienie Health Connect
+    //true → UI powinno poprosić użytkownika o uprawnienie Health Connect
     private val _hcPermissionNeeded = MutableStateFlow(false)
     val hcPermissionNeeded: StateFlow<Boolean> = _hcPermissionNeeded
 
-    // true → HC działa, uprawnienia OK, ale brak źródła danych (np. brak podłączonej app fitness)
+    //  true → HC działa, uprawnienia OK, ale brak źródła danych (np. brak podłączonej app fitness)
     private val _hcNoDataSource = MutableStateFlow(false)
     val hcNoDataSource: StateFlow<Boolean> = _hcNoDataSource
 
-    // true → trwa właśnie odczyt kroków (spinner)
+    //true → trwa właśnie odczyt kroków (spinner)
     private val _hcRefreshing = MutableStateFlow(false)
     val hcRefreshing: StateFlow<Boolean> = _hcRefreshing
 
@@ -186,7 +186,7 @@ class TaskViewModel(
     private val _hcDiagnostics = MutableStateFlow<HcDiagnostics?>(null)
     val hcDiagnostics: StateFlow<HcDiagnostics?> = _hcDiagnostics
 
-    //zapis zadan do bazy
+    // zapis zadan do bazy
     fun saveTask(task: TaskEntity) {
         viewModelScope.launch {
 
@@ -303,7 +303,7 @@ class TaskViewModel(
                     return@launch
                 }
                 val model = GenerativeModel("gemini-2.5-flash", apiKey)
-                //PROMPT WYSYŁANY DO GEMINI (OUTPUT=ZADNIE)
+                // PROMPT WYSYŁANY DO GEMINI (OUTPUT=ZADNIE)
                 val prompt = """
                     Jesteś wirtualnym trenerem rozwoju osobistego. 
                     Użytkownik ma zadanie: ${task.taskName} (${task.category})
@@ -550,7 +550,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
                     .await()
             } catch (_: Exception) { return@launch }
 
-            // Wyczyść lokalną bazę przed sync — bez tego usunięte w Firebase taski
+            // Wyczyść lokalną bazę przed sync - bez tego usunięte w Firebase taski
             // zostają w Room na zawsze (brak hard-delete sync)
             taskDao.deleteAllTasks()
 
@@ -579,7 +579,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
                 Log.d("Steps", "[syncFromFirebase] task=${task.id}/${task.taskName} taskType=$taskType stepGoal=$stepGoal")
                 taskDao.insertTask(task)
             }
-            // Po sync rozpisz mandatory tasks na bieżący (i ewentualnie kolejny) tydzień
+            //Po sync rozpisz mandatory tasks na bieżący (i ewentualnie kolejny) tydzień
             ensureMandatoryScheduledForWeekSuspend()
         }
     }
@@ -587,7 +587,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
     /**
      * Wyrzuca harmonogram mandatory tasks od dziś włącznie i rozpisuje na nowo
      * (z aktualnymi ustawieniami weekend/holiday). Wywoływać po: zmianie ustawień,
-     * załadowaniu świąt, załadowaniu prefs.
+     * załadowaniu świąt, załadowaniu prefs
      */
     fun regenerateMandatoryScheduleFromToday() {
         viewModelScope.launch {
@@ -600,7 +600,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
         }
     }
 
-    /** Wersja suspend — używana po syncFromFirebase żeby pokryć tasks z Firebase. */
+    //Wersja suspend - używana po syncFromFirebase żeby pokryć tasks z Firebase
     private suspend fun ensureMandatoryScheduledForWeekSuspend() {
         val today = normalizeDay(System.currentTimeMillis())
         val sunday = upcomingSundayInclusive(today)
@@ -714,7 +714,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
     fun loadHolidaysSmart(context: Context) {
         viewModelScope.launch {
 
-            //pobierz liste swiat z lokalnej bazy
+            // pobierz liste swiat z lokalnej bazy
             val local = loadHolidaysFromLocal(context)
 
             if (local.isNotEmpty()) {
@@ -723,7 +723,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
                 return@launch
             }
 
-            //pobierz liste swiat z zewnetrznej bazy
+            // pobierz liste swiat z zewnetrznej bazy
             val remote = loadHolidaysFromFirebase()
 
             if (remote.isNotEmpty()) {
@@ -733,7 +733,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
                 return@launch
             }
 
-            //pobierz liste swiat z calendarific
+            // pobierz liste swiat z calendarific
             val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
             val apiKey = prefs.getString("holiday_api_key", "") ?: ""
 
@@ -765,7 +765,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
             com.MateuszW.aigrowthtracker.ui.theme.ThemeState.themeMode =
                 com.MateuszW.aigrowthtracker.ui.theme.ThemeMode.valueOf(themeStr)
 
-            // Załaduj godzinę kalendarza
+            //Załaduj godzięn kalendarza
             calendarEventHour.value = prefs.getInt("calendar_event_hour", 17)
 
             val isFirstRun = !prefs.contains("show_weekends") || !prefs.contains("show_holidays")
@@ -797,7 +797,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
                     }
                 } catch (_: Exception) { /* offline */ }
             }
-            // Po załadowaniu settings — przerysuj harmonogram mandatory z aktualnymi flagami
+            // Po załadowaniu settings - przerysuj harmonogram mandatory z aktualnymi flagami
             regenerateMandatoryScheduleFromToday()
         }
     }
@@ -832,7 +832,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
         persistWeeklyTasks()
     }
 
-    /** Zapis weekly tasks do Room + Firebase (po każdej zmianie +/-). */
+    // Zapis weekly tasks do Room + Firebase (po każdej zmianie +/-)
     private fun persistWeeklyTasks() {
         saveWeeklyTasksLocal()
         saveWeeklyTasksToFirebase()
@@ -1056,7 +1056,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
     fun finishTaskWithSummary(rating: Int, note: String) {
         timerJob?.cancel()
         _activeTask.value?.let { task ->
-            // Zapisz instrukcje AI jeśli były wygenerowane dla tego zadania
+            //  Zapisz instrukcje AI jeśli były wygenerowane dla tego zadania
             val aiInstr = _aiTaskInstruction.value?.takeIf { it.taskId == task.id }?.instructions
             viewModelScope.launch {
                 Log.d("Steps", "[finishTaskWithSummary] timer task=${task.taskName} rating=$rating aiInstr=${aiInstr?.take(50)}")
@@ -1087,7 +1087,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
     /**
      * Sprawdza czy któraś z aktywnych STEPS tasks osiągnęła cel. Jeśli tak, auto-zapisuje
      * wykonanie do historii bez wymuszania ratingu (rating = null, note = "Auto").
-     * Wywoływane przy każdym refreshTodaySteps po aktualizacji _todaySteps.
+     * Wywoływane przy każdym refreshTodaySteps po aktualizacji _todaySteps
      */
     private fun checkAutoCompleteSteps(currentSteps: Long) {
         viewModelScope.launch {
@@ -1131,7 +1131,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
                             stepsCompleted = effective
                         )
                         saveHistoryBoth(history)
-                        // Sprzątanie baseline
+                        //  Sprzątanie baseline
                         if (task.stepsBaseline != null) {
                             _stepsBaselines.value = _stepsBaselines.value - task.id
                             val cleared = task.copy(
@@ -1154,7 +1154,7 @@ Zwroc TYLKO poprawny JSON (bez markdown):
     /**
      * Zapisuje ukończenie zadania STEPS. Oddzielna funkcja od [finishTaskWithSummary],
      * bo zadania STEPS nie używają _activeTask (nie mają timera).
-     * Usuwa baseline z [_stepsBaselines], żeby zadanie zniknęło z "Zadania w toku".
+     * Usuwa baseline z [_stepsBaselines], żeby zadanie zniknęło z "Zadania w toku"
      */
     fun finishStepsTask(task: TaskEntity, stepsCompleted: Long, rating: Int, note: String) {
         viewModelScope.launch {
@@ -1176,9 +1176,9 @@ Zwroc TYLKO poprawny JSON (bez markdown):
                 stepsCompleted = stepsCompleted
             )
             saveHistoryBoth(history)
-            // Usuń baseline — zadanie ukończone, znika z "Zadania w toku"
+            // Usuń baseline - zadanie ukończone, znika z "Zadania w toku"
             _stepsBaselines.value = _stepsBaselines.value - task.id
-            // Wyczyść pola aktywności w Room + Firebase
+            //Wyczyść pola aktywności w Room + Firebase
             val cleared = task.copy(stepsBaseline = null, stepsStartedAt = null, stepsCountingMode = null)
             taskDao.updateTask(cleared)
             val userId = AuthManager.getUserId()
@@ -1342,7 +1342,7 @@ ZWRÓĆ TYLKO poprawny JSON (bez markdown, bez backticks):
                 }
                 val apiKey = getGeminiKey(context)
                 if (apiKey.isBlank()) {
-                    _weeklyReviewSummary.value = ""   // pusty string → UI pokaże "Brak klucza API"
+                    _weeklyReviewSummary.value = ""   //pusty string → UI pokaże "Brak klucza API"
                     return@launch
                 }
 
@@ -1366,7 +1366,7 @@ ZWRÓĆ TYLKO poprawny JSON (bez markdown, bez backticks):
                     quality = obj.optString("weekQuality", "neutral")
                         .let { if (it in listOf("bad", "neutral", "great")) it else "neutral" }
                 } catch (e: Exception) {
-                    // Gemini zwrócił czysty tekst zamiast JSON – wróć do starego zachowania
+                    // Gemini zwrócił czysty tekst zamiast JSON - wróć do starego zachowania
                     Log.w("AI_REVIEW", "Nie udało się sparsować JSON, traktuje jako tekst: ${e.message}")
                     _weeklyReviewSummary.value = rawText
                     _weekQuality.value = "neutral"
@@ -1508,7 +1508,7 @@ ZWROT TYLKO JSON:
                     description = objTask.getString("description"),
                     targetValue = if (objTask.has("targetValue") && !objTask.isNull("targetValue"))
                         objTask.getDouble("targetValue").toFloat() else null,
-                    // Fallback: jeśli AI zwróci duration <= 0, ustaw domyślnie 30 min
+                    //Fallback: jeśli AI zwróci duration <= 0, ustaw domyślnie 30 min
                     durationMinutes = if (rawDuration > 0) rawDuration else 30
                 )
             }
@@ -1665,7 +1665,7 @@ ZWROT TYLKO JSON:
      * Persystuje niewykonane zadania z planu dnia do historii.
      * Dla kazdego minionego dnia sprawdza, co bylo zaplanowane (AI + mandatory)
      * i co faktycznie wykonane. Brakujace wpisy wstawia z completed=false.
-     * Zwraca liczbe wstawionych wpisow.
+     * Zwraca liczbe wstawionych wpisow
      */
     suspend fun persistUnfinishedPlanItems(context: Context): Int {
         val plan = loadAiPlanLocal(context) ?: return 0
@@ -1705,10 +1705,10 @@ ZWROT TYLKO JSON:
                 }
                 if (!alreadyInHistory) {
                     val entry = TaskHistoryEntity(
-                        taskId = -2, // marker: zaplanowany AI task niewykonany
+                        taskId = -2, //  marker: zaplanowany AI task niewykonany
                         taskName = aiTask.description,
                         category = aiTask.mainName,
-                        date = dayMillis + 12 * 3600_000L, // noon
+                        date = dayMillis + 12 * 3600_000L, //noon
                         completed = false,
                         note = "Niewykonane",
                         isAIGenerated = true,
@@ -1746,7 +1746,7 @@ ZWROT TYLKO JSON:
 
     /**
      * Zwraca statystyki per dzien z ostatniego tygodnia
-     * na bazie historii (tylko taski z planu: AI, mandatory, odroczone).
+     * na bazie historii (tylko taski z planu: AI, mandatory, odroczone)
      */
     suspend fun getWeeklyDayStats(): List<com.MateuszW.aigrowthtracker.data.DayStats> {
         val since = normalizeDay(System.currentTimeMillis()) - 7L * 86_400_000L
@@ -1789,7 +1789,7 @@ ZWROT TYLKO JSON:
 
     /**
      * Zwraca unikalne AI taski z historii ostatniego tygodnia do recenzji.
-     * Grupuje po aiMainName, zwraca jeden wpis per kategoria AI.
+     * Grupuje po aiMainName, zwraca jeden wpis per kategoria AI
      */
     suspend fun getAiTasksForReview(): List<TaskHistoryEntity> {
         val since = normalizeDay(System.currentTimeMillis()) - 7L * 86_400_000L
@@ -1855,13 +1855,13 @@ ZWROT TYLKO JSON:
             .getStringSet("configured", emptySet()) ?: emptySet()
     }
 
-    // In-memory guard — ustawiana natychmiast po wejściu w weekly flow,
-    // zapobiega ponownemu otwarciu nawet jeśli SharedPreferences nie zdążyły się zapisać.
+    // In-memory guard - ustawiana natychmiast po wejściu w weekly flow,
+    // zapobiega ponownemu otwarciu nawet jeśli SharedPreferences nie zdążyły się zapisać
     @Volatile
     private var _weeklyFlowOpenedThisSession = false
 
     fun shouldOpenWeeklyFlow(context: Context): Boolean {
-        // Guard: jeśli flow już był otwarty w tej sesji — nigdy ponownie
+        //  Guard: jeśli flow już był otwarty w tej sesji - nigdy ponownie
         if (_weeklyFlowOpenedThisSession) return false
 
         val cal = Calendar.getInstance()
@@ -1873,7 +1873,7 @@ ZWROT TYLKO JSON:
         val lastKey = prefs.getString("last_opened", "") ?: ""
         if (lastKey == weekKey) return false
 
-        // Ustaw OBYDWA guardy NATYCHMIAST — in-memory + SharedPreferences
+        //Ustaw OBYDWA guardy NATYCHMIAST - in-memory + SharedPreferences
         // Dzięki temu nawet restart apki nie wywoła flow ponownie
         _weeklyFlowOpenedThisSession = true
         prefs.edit { putString("last_opened", weekKey) }
@@ -2097,7 +2097,7 @@ ZWROT TYLKO JSON:
         _weeklyReviewSummary.value = null
     }
 
-    /** Czyści stan in-memory przy wylogowaniu. Room/SharedPreferences czyszczone osobno. */
+    //Czyści stan in-memory przy wylogowaniu. Room/SharedPreferences czyszczone osobno
     fun resetForLogout() {
         _weeklyFlowOpenedThisSession = false
         _weeklyReviewSummary.value = null
@@ -2106,7 +2106,7 @@ ZWROT TYLKO JSON:
     /**
      * DEV: Generuje zadania AI na pozostałe dni bieżącego tygodnia (od dziś do niedzieli).
      * Wymaga wcześniejszego zaplanowania tygodnia (bo bazuje na wybranych celach).
-     * Uzupełnia istniejący plan o brakujące dni bez nadpisywania tych już zaplanowanych.
+     * Uzupełnia istniejący plan o brakujące dni bez nadpisywania tych już zaplanowanych
      */
     fun generateRemainingDays(context: Context) {
         viewModelScope.launch {
@@ -2118,13 +2118,13 @@ ZWROT TYLKO JSON:
                     return@launch
                 }
 
-                // Wyczyść poprzedni plan
+                //Wyczyść poprzedni plan
                 _aiDailyTasks.value = emptyMap()
                 _aiPlan.value = null
                 _weeklyTasks.value = emptyList()
                 _weekPlanned.value = false
 
-                // Załaduj dane z poprzedniego tygodnia jako domyślne
+                //Załaduj dane z poprzedniego tygodnia jako domyślne
                 val difficulty = loadDraftDifficulty(context)
                 val goalDrafts = loadGoalDrafts(context)
 
@@ -2255,7 +2255,7 @@ ZWROT TYLKO JSON:
 """.trimIndent()
     }
 
-    // ── Health Connect – kroki ─────────────────────────────────────────────
+    //  ── Health Connect - kroki ─────────────────────────────────────────────
 
     /**
      * Pobiera sumę kroków za dzisiejszy dzień z Health Connect i aktualizuje [todaySteps].
@@ -2268,7 +2268,7 @@ ZWROT TYLKO JSON:
         viewModelScope.launch {
             _hcRefreshing.value = true
 
-            // Zmienne diagnostyczne — zbierane przez cały flow, zapisywane w finally
+            // Zmienne diagnostyczne - zbierane przez cały flow, zapisywane w finally
             var diagSdkStatus = -1
             var diagGranted = emptySet<String>()
             var diagReadPerm = ""
@@ -2283,7 +2283,7 @@ ZWROT TYLKO JSON:
             var diagException: String? = null
 
             try {
-                // ── [1] SDK status ────────────────────────────────────────────
+                //  ── [1] SDK status ────────────────────────────────────────────
                 val sdkStatus = HealthConnectClient.getSdkStatus(context)
                 diagSdkStatus = sdkStatus
                 Log.d("HC", "[1] getSdkStatus=$sdkStatus  (SDK_AVAILABLE=${HealthConnectClient.SDK_AVAILABLE})")
@@ -2294,7 +2294,7 @@ ZWROT TYLKO JSON:
 
                 val hc = HealthConnectClient.getOrCreate(context)
 
-                // ── [2] Uprawnienia ───────────────────────────────────────────
+                //  ── [2] Uprawnienia ───────────────────────────────────────────
                 val readPerm = HealthPermission.getReadPermission(StepsRecord::class)
                 diagReadPerm = readPerm
                 val granted = hc.permissionController.getGrantedPermissions()
@@ -2313,7 +2313,7 @@ ZWROT TYLKO JSON:
                 }
                 _hcPermissionNeeded.value = false
 
-                // ── [3] Zakres czasu ──────────────────────────────────────────
+                //  ── [3] Zakres czasu ──────────────────────────────────────────
                 val zoneId = ZoneId.systemDefault()
                 diagZoneId = zoneId.toString()
                 val startOfDay = LocalDateTime.now()
@@ -2349,7 +2349,7 @@ ZWROT TYLKO JSON:
                 // Auto-complete: sprawdź czy któraś z aktywnych STEPS tasks osiągnęła cel
                 checkAutoCompleteSteps(steps)
 
-                // ── [5] readRecords() gdy aggregate null lub 0 — deep diagnostics ──
+                //── [5] readRecords() gdy aggregate null lub 0 - deep diagnostics ──
                 if (rawMetric == null || rawMetric == 0L) {
                     Log.d("HC", "[5] aggregate=$rawMetric → uruchamiam readRecords<StepsRecord> dla diagnostyki")
                     try {
@@ -2408,12 +2408,12 @@ ZWROT TYLKO JSON:
                 Log.d("HC", "[FINAL] diagnostics=$diag")
             }
 
-            // Po odczycie kroków — sprawdź czy jakieś zadania przekroczyły północ
+            //  Po odczycie kroków - sprawdź czy jakieś zadania przekroczyły północ
             checkMidnightCrossing(context)
         }
     }
 
-    /** Wywołaj po przyznaniu uprawnienia HC — czyści flagę i odczytuje kroki. */
+    // Wywołaj po przyznaniu uprawnienia HC - czyści flagę i odczytuje kroki
     fun onHealthConnectPermissionGranted(context: Context) {
         _hcPermissionNeeded.value = false
         _hcNoDataSource.value = false
@@ -2422,7 +2422,7 @@ ZWROT TYLKO JSON:
 
     /**
      * Ustawia punkt startowy kroków dla zadania STEPS uruchamianego ręcznie
-     * (gdy zadanie nie jest zaplanowane na dziś). Punkt = aktualna liczba kroków.
+     * (gdy zadanie nie jest zaplanowane na dziś). Punkt = aktualna liczba kroków
      */
     fun setStepsBaseline(taskId: Int) {
         val baseline = _todaySteps.value
@@ -2452,7 +2452,7 @@ ZWROT TYLKO JSON:
 
     /**
      * Startuje zadanie STEPS z wybranym trybem. Persystuje do Room + Firebase.
-     * Zwraca true jeśli zadanie zostało od razu zaliczone (FROM_MIDNIGHT + todaySteps >= goal).
+     * Zwraca true jeśli zadanie zostało od razu zaliczone (FROM_MIDNIGHT + todaySteps >= goal)
      */
     fun startStepsTask(task: TaskEntity, mode: String): Boolean {
         val now = System.currentTimeMillis()
@@ -2462,12 +2462,12 @@ ZWROT TYLKO JSON:
             stepsStartedAt = now,
             stepsCountingMode = mode
         )
-        // Aktualizuj też in-memory _stepsBaselines (dopóki UI go używa)
+        //  Aktualizuj też in-memory _stepsBaselines (dopóki UI go używa)
         _stepsBaselines.value = _stepsBaselines.value + (task.id to baseline)
         updateTask(updated)
         Log.d("Steps", "[startStepsTask] task=${task.id}/${task.taskName} mode=$mode baseline=$baseline todaySteps=${_todaySteps.value}")
 
-        // Sprawdź natychmiastowe zaliczenie (FROM_MIDNIGHT + cel osiągnięty)
+        //  Sprawdź natychmiastowe zaliczenie (FROM_MIDNIGHT + cel osiągnięty)
         val goal = task.stepGoal ?: 0
         if (mode == "FROM_MIDNIGHT" && goal > 0 && _todaySteps.value >= goal) {
             Log.d("Steps", "[startStepsTask] od razu zaliczone: todaySteps=${_todaySteps.value} >= goal=$goal")
@@ -2479,7 +2479,7 @@ ZWROT TYLKO JSON:
 
     /**
      * Rozwiązuje zadania STEPS które przetrwały z poprzedniego dnia (po restarcie apki).
-     * Odczytuje kroki z HC za dzień startu zadania i zapisuje wynik do historii.
+     * Odczytuje kroki z HC za dzień startu zadania i zapisuje wynik do historii
      */
     fun resolveStaleStepsTasks(context: Context) {
         viewModelScope.launch {
@@ -2497,7 +2497,7 @@ ZWROT TYLKO JSON:
                 val taskDayStart = normalizeDay(startedAt)
                 val taskDayEnd = taskDayStart + 86_400_000L
 
-                // Odczytaj kroki z HC za dzień w którym zadanie było aktywne
+                //Odczytaj kroki z HC za dzień w którym zadanie było aktywne
                 val stepsForDay = readStepsFromHc(context, taskDayStart, taskDayEnd)
                 val goal = task.stepGoal ?: 0
                 val baseline = task.stepsBaseline ?: 0L
@@ -2541,7 +2541,7 @@ ZWROT TYLKO JSON:
 
     /**
      * Sprawdza w runtime czy któreś aktywne zadania STEPS przekroczyły północ.
-     * Wywoływane przy każdym refreshTodaySteps.
+     * Wywoływane przy każdym refreshTodaySteps
      */
     private suspend fun checkMidnightCrossing(context: Context) {
         val todayStart = normalizeDay(System.currentTimeMillis())
@@ -2555,7 +2555,7 @@ ZWROT TYLKO JSON:
     }
 
     /**
-     * Pomocnicza: odczytuje sumę kroków z Health Connect za podany zakres czasu.
+     * Pomocnicza: odczytuje sumę kroków z Health Connect za podany zakres czasu
      */
     private suspend fun readStepsFromHc(context: Context, startMillis: Long, endMillis: Long): Long {
         return try {
@@ -2581,11 +2581,11 @@ ZWROT TYLKO JSON:
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Mandatory task scheduling
+    //─────────────────────────────────────────────────────────────────────────
+    //  Mandatory task scheduling
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** Mapowanie Calendar.DAY_OF_WEEK → kod używany w recurrenceValue ("Pn", "Wt", ...). */
+    // Mapowanie Calendar.DAY_OF_WEEK → kod używany w recurrenceValue ("Pn", "Wt", ...)
     private fun dayCodePl(dayOfWeek: Int): String = when (dayOfWeek) {
         Calendar.MONDAY    -> "Pn"
         Calendar.TUESDAY   -> "Wt"
@@ -2597,7 +2597,7 @@ ZWROT TYLKO JSON:
         else               -> ""
     }
 
-    /** True jeśli ten konkretny dzień jest "pomijany" w ustawieniach (weekend lub święto). */
+    //  True jeśli ten konkretny dzień jest "pomijany" w ustawieniach (weekend lub święto)
     private fun isDaySkipped(timeMillis: Long): Boolean {
         val cal = Calendar.getInstance().apply { timeInMillis = timeMillis }
         val dow = cal.get(Calendar.DAY_OF_WEEK)
@@ -2612,7 +2612,7 @@ ZWROT TYLKO JSON:
     /**
      * Czy zadanie obowiązkowe wypada w konkretnym dniu?
      * Logika dla każdego recurrenceType. Uwzględnia weekend/holiday skip.
-     * X_TIMES_WEEK używa deterministycznego algorytmu na poziomie tygodnia.
+     * X_TIMES_WEEK używa deterministycznego algorytmu na poziomie tygodnia
      */
     private fun mandatoryFallsOn(task: TaskEntity, dayStart: Long): Boolean {
         if (!task.isMandatory) return false
@@ -2641,7 +2641,7 @@ ZWROT TYLKO JSON:
         }
     }
 
-    /** Zwraca listę dat (start-of-day) w tygodniu zawierającym [anyDayMillis], które NIE są pomijane. */
+    // Zwraca listę dat (start-of-day) w tygodniu zawierającym [anyDayMillis], które NIE są pomijane
     private fun activeDaysInWeek(anyDayMillis: Long): List<Long> {
         val cal = Calendar.getInstance().apply {
             timeInMillis = anyDayMillis
@@ -2659,7 +2659,7 @@ ZWROT TYLKO JSON:
         return result
     }
 
-    /** Zwraca date startu najbliższej (lub bieżącej) niedzieli włącznie, jako start-of-day. */
+    //  Zwraca date startu najbliższej (lub bieżącej) niedzieli włącznie, jako start-of-day
     private fun upcomingSundayInclusive(fromMillis: Long = System.currentTimeMillis()): Long {
         val cal = Calendar.getInstance().apply {
             timeInMillis = fromMillis
@@ -2674,7 +2674,7 @@ ZWROT TYLKO JSON:
 
     /**
      * Rozpisuje pojedyncze zadanie obowiązkowe od `fromDay` (włącznie) do `toDay` (włącznie).
-     * Idempotentne — dzięki UNIQUE check w DAO duplikaty są pomijane.
+     * Idempotentne - dzięki UNIQUE check w DAO duplikaty są pomijane
      */
     private suspend fun scheduleMandatoryRange(task: TaskEntity, fromDay: Long, toDay: Long) {
         if (!task.isMandatory) return
@@ -2698,7 +2698,7 @@ ZWROT TYLKO JSON:
         if (entries.isNotEmpty()) mandatoryScheduleDao.insertAll(entries)
     }
 
-    /** Rozpisuje JEDNO obowiązkowe zadanie od dziś do najbliższej niedzieli włącznie. */
+    // Rozpisuje JEDNO obowiązkowe zadanie od dziś do najbliższej niedzieli włącznie
     fun scheduleMandatoryUntilSunday(task: TaskEntity) {
         if (!task.isMandatory) return
         viewModelScope.launch {
@@ -2710,8 +2710,8 @@ ZWROT TYLKO JSON:
 
     /**
      * Wywoływane przy starcie aplikacji. Jeśli ostatnia zaplanowana data jest wcześniejsza niż
-     * najbliższa niedziela, rozpisz cały kolejny tydzień (Pn–Nd) dla wszystkich mandatory tasks.
-     * To pokrywa scenariusz "user nie używa apki w niedzielę".
+     * najbliższa niedziela, rozpisz cały kolejny tydzień (Pn-Nd) dla wszystkich mandatory tasks.
+     * To pokrywa scenariusz "user nie używa apki w niedzielę"
      */
     fun ensureMandatoryScheduledForWeek() {
         viewModelScope.launch {
@@ -2725,7 +2725,7 @@ ZWROT TYLKO JSON:
                 scheduleMandatoryRange(task, today, sunday)
             }
 
-            // Jeśli już mamy harmonogram do tej niedzieli, rozpisz kolejny tydzień (Pn–Nd)
+            //Jeśli już mamy harmonogram do tej niedzieli, rozpisz kolejny tydzień (Pn-Nd)
             if (lastScheduled >= sunday) {
                 val nextMonday = Calendar.getInstance().apply {
                     timeInMillis = sunday
@@ -2742,19 +2742,16 @@ ZWROT TYLKO JSON:
         }
     }
 
-    /** Flow wpisów harmonogramu dla konkretnego dnia (start-of-day). */
     fun getMandatoryScheduleForDay(day: Long): kotlinx.coroutines.flow.Flow<List<MandatoryScheduleEntity>> {
         val start = normalizeDay(day)
         val end = start + 86_399_999L
         return mandatoryScheduleDao.getScheduleBetween(start, end)
     }
 
-    /** Usuwa wpisy harmonogramu dla zadania (wywoływane przy delete / zmianie recurrence). */
     fun clearMandatoryScheduleForTask(taskId: Int) {
         viewModelScope.launch { mandatoryScheduleDao.deleteForTask(taskId) }
     }
 
-    /** Zwraca true, jeśli zadanie obowiązkowe jest aktywne w dzisiejszym dniu. */
     fun isActiveToday(task: TaskEntity): Boolean {
         if (!task.isMandatory) return false
         val today = when (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
@@ -2771,11 +2768,10 @@ ZWROT TYLKO JSON:
             "DAILY" -> true
             "SPECIFIC_DAYS" ->
                 task.recurrenceValue?.split(",")?.map { it.trim() }?.contains(today) == true
-            else -> false   // X_TIMES_WEEK – nie da się ustalić bez historii; użytkownik startuje ręcznie
+            else -> false   // X_TIMES_WEEK - nie da się ustalić bez historii; użytkownik startuje ręcznie
         }
     }
 
-    /** Nazwa dnia tygodnia w formacie używanym przez [_aiDailyTasks]. */
     fun getTodayDayName(): String = when (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
         Calendar.MONDAY    -> "MONDAY"
         Calendar.TUESDAY   -> "TUESDAY"

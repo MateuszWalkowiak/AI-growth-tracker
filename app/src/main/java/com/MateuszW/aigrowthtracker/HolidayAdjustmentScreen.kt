@@ -29,7 +29,7 @@ fun HolidayAdjustmentScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Avatar z dynamicznym tekstem
+            //  Avatar z dynamicznym tekstem
             AssistantSpeechBubble(
                 painter = painterResource(R.drawable.assistant_holiday),
                 speechText = "W przyszłym tygodniu wypada $holidaysCount " +

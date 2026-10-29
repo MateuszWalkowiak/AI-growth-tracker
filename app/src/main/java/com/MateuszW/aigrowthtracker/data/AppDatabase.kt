@@ -35,7 +35,7 @@ abstract class AppDatabase : RoomDatabase() {
         /**
          * v10 → v11: usuwa zdublowane wpisy harmonogramu (zostawiając najstarszy)
          * i zakłada UNIQUE INDEX(taskId, date). Nazwa indeksu musi być zgodna z tą,
-         * którą Room generuje dla @Index na MandatoryScheduleEntity.
+         * którą Room generuje dla @Index na MandatoryScheduleEntity
          */
         private val MIGRATION_10_11 = object : Migration(10, 11) {
             override fun migrate(db: SupportSQLiteDatabase) {

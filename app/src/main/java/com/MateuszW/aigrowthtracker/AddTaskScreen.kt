@@ -55,7 +55,7 @@ fun AddTaskScreen(
     var currentLevel by remember { mutableStateOf("") }
     var goals by remember { mutableStateOf("") }
 
-    // ── Śledzenie kroków ───────────────────────────────────────────────────
+    //  ── Śledzenie kroków ───────────────────────────────────────────────────
     var isStepTracking by remember { mutableStateOf(selectedTask in autoStepTasks) }
     var stepGoalFloat by remember { mutableFloatStateOf(10000f) }
 
@@ -92,7 +92,7 @@ fun AddTaskScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            //wybór kategorii
+            // wybór kategorii
             ExposedDropdownMenuBox(
                 expanded = categoryExpanded,
                 onExpandedChange = { categoryExpanded = !categoryExpanded }
@@ -132,7 +132,7 @@ fun AddTaskScreen(
                 )
             }
 
-            //nazwa zadania
+            // nazwa zadania
             ExposedDropdownMenuBox(
                 expanded = taskExpanded,
                 onExpandedChange = { taskExpanded = !taskExpanded }
@@ -173,7 +173,7 @@ fun AddTaskScreen(
 
             HorizontalDivider()
 
-            // ── Cel zadania — zależy od typu ──────────────────────────────
+            // ── Cel zadania - zależy od typu ──────────────────────────────
             if (isRunningSelected) {
                 Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Rodzaj celu biegania", fontWeight = FontWeight.Bold)

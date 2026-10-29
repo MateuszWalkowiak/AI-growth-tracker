@@ -45,18 +45,18 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.foundation.layout.PaddingValues
 import kotlin.math.sin
 
-// ── Calendar day progress colors ────────────────────────────────────────────
-// Pastelowy gradient: red → orange → lime
+//  ── Calendar day progress colors ────────────────────────────────────────────
+//  Pastelowy gradient: red → orange → lime
 
-private val CalendarPastelRed    = Color(0xFFE8827C)  // 0%   — pastelowy czerwony
-private val CalendarPastelOrange = Color(0xFFF2BB7A)  // 50%  — pastelowy pomarańczowy
-private val CalendarPastelLime   = Color(0xFFB5E86B)  // 100% — pastelowy lime
-private val CalendarGoldOver     = Color(0xFFFFD54F)  // >100% — ciepłe złoto (z animacją)
-// Przyszlosc
-private val CalendarFuture = Color(0xFFE8DDD0)        // warm beige
-// Przed kontem
+private val CalendarPastelRed    = Color(0xFFE8827C)  //0%   - pastelowy czerwony
+private val CalendarPastelOrange = Color(0xFFF2BB7A)  //50%  - pastelowy pomarańczowy
+private val CalendarPastelLime   = Color(0xFFB5E86B)  // 100% - pastelowy lime
+private val CalendarGoldOver     = Color(0xFFFFD54F)  // >100% - ciepłe złoto (z animacją)
+//Przyszlosc
+private val CalendarFuture = Color(0xFFE8DDD0)        //warm beige
+//Przed kontem
 private val CalendarInactive = Color(0xFFB5A99A)      // warm gray
-// Dzisiejszy dzien — ramka podswietlajaca
+// Dzisiejszy dzien - ramka podswietlajaca
 private val CalendarTodayBorder = Color(0xFFD4710A)   // primary orange
 
 
@@ -86,7 +86,7 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
 
-    // Dialog ankiety po zakończeniu zadania (identyczny flow jak ExecuteTaskScreen)
+    //  Dialog ankiety po zakończeniu zadania (identyczny flow jak ExecuteTaskScreen)
     var showSummaryDialog by remember { mutableStateOf(false) }
     var summaryRating by remember { mutableStateOf(0) }
     var summaryNote by remember { mutableStateOf("") }
@@ -106,11 +106,11 @@ fun MainScreen(
     val nonAiDoneCount = remember(todayHistory) {
         todayHistory.count { !it.isAIGenerated && it.completed }
     }
-    // Odroczone zadania przełożone na dziś (np. bieg) — niewykonane wpisy z notatką "(odroczone)".
+    //  Odroczone zadania przełożone na dziś (np. bieg) - niewykonane wpisy z notatką "(odroczone)"
     val deferredRunsCount = remember(todayHistory) {
         todayHistory.count { !it.completed && it.note?.contains("(odroczone)") == true }
     }
-    // Cel dnia = AI + obowiązkowe na dziś + odroczone (spójne z DayDetailsScreen).
+    // Cel dnia = AI + obowiązkowe na dziś + odroczone (spójne z DayDetailsScreen)
     val totalPlanSize = todayAiTasksCount + todayMandatoryTasksCount + deferredRunsCount
     val dailyGoal = when {
         totalPlanSize > 0 -> totalPlanSize
@@ -175,7 +175,7 @@ fun MainScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // ── Kalendarz ────────────────────────────────────────────────
+            //  ── Kalendarz ────────────────────────────────────────────────
             var currentMonth by remember { mutableStateOf(java.util.Calendar.getInstance()) }
 
             Row(
@@ -270,14 +270,14 @@ fun MainScreen(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
                         )
-                        // Timer
+                        //  Timer
                         Text(
                             "%02d:%02d".format(minutes, seconds),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        // Zrobione — otwiera ankietę (ujednolicone z ExecuteTaskScreen)
+                        //Zrobione - otwiera ankietę (ujednolicone z ExecuteTaskScreen)
                         Button(
                             onClick = { showSummaryDialog = true },
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
@@ -286,7 +286,7 @@ fun MainScreen(
                         ) {
                             Text("Zrobione", style = MaterialTheme.typography.labelMedium)
                         }
-                        // Anuluj
+                        //  Anuluj
                         OutlinedButton(
                             onClick = onCancelTask,
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
@@ -328,7 +328,7 @@ fun MainScreen(
                 }
             }
         }
-        } // close AnimatedVisibility
+        } //close AnimatedVisibility
     }
 
     // ── Ankieta po zakończeniu zadania (ujednolicone z ExecuteTaskScreen) ──
@@ -381,7 +381,7 @@ fun MainScreen(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Kalendarz
+//Kalendarz
 // ─────────────────────────────────────────────────────────────────────────────
 
 fun formatDay(time: Long): String {
@@ -402,7 +402,7 @@ fun formatDay(time: Long): String {
 /**
  * Interpoluje kolor dnia kalendarza na podstawie procentu wykonania zadan.
  * Ciepla paleta: terracotta-red -> amber -> sage-green -> forest-green.
- * Czytelna jakosciowo, ale wpisujaca sie w bear-theme.
+ * Czytelna jakosciowo, ale wpisujaca sie w bear-theme
  */
 private fun calendarDayColor(percentage: Float): Color {
     if (percentage <= 0f) return CalendarPastelRed
@@ -453,7 +453,7 @@ fun RealCalendarWeek(
     val today = normalizeDay(System.currentTimeMillis())
 
     Column {
-        // Naglowki dni tygodnia
+        //Naglowki dni tygodnia
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -531,7 +531,7 @@ fun RealCalendarWeek(
 
                     // ── Kolor dnia ───────────────────────────────────────
                     val baseColor = when {
-                        // Swieta i weekendy: stonowane ciepłe akcenty
+                        //Swieta i weekendy: stonowane ciepłe akcenty
                         // ale JESLI maja progres, to blend z kolorem progresu
                         isHoliday && count > 0 -> lerpColor(HolidayAmber, calendarDayColor(percentage), 0.5f)
                         isHoliday -> HolidayAmber
@@ -559,7 +559,7 @@ fun RealCalendarWeek(
                         val inf = rememberInfiniteTransition(label = "glitter")
                         inf.animateFloat(
                             initialValue = 0f,
-                            targetValue = 6.2832f, // 2*PI
+                            targetValue = 6.2832f, //  2*PI
                             animationSpec = infiniteRepeatable(
                                 animation = tween(2400, easing = LinearEasing),
                                 repeatMode = RepeatMode.Restart
@@ -613,7 +613,7 @@ fun RealCalendarWeek(
                             Canvas(modifier = Modifier.matchParentSize()) {
                                 val w = size.width
                                 val h = size.height
-                                // 6 sparkle points at fixed positions, phase-shifted
+                                //6 sparkle points at fixed positions, phase-shifted
                                 val sparkles = listOf(
                                     Offset(0.15f * w, 0.20f * h) to 0f,
                                     Offset(0.75f * w, 0.15f * h) to 1.0f,

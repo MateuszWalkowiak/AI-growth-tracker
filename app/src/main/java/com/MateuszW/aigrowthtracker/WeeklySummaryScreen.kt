@@ -20,7 +20,7 @@ import com.MateuszW.aigrowthtracker.data.WeeklyReviewInput
 
 fun difficultyColor(level: Int): Color {
     val colors = listOf(
-        Color(0xFF2E7D32), //ciemny zielony
+        Color(0xFF2E7D32), // ciemny zielony
         Color(0xFF43A047),
         Color(0xFF8BC34A),
         Color(0xFFCDDC39),
@@ -29,7 +29,7 @@ fun difficultyColor(level: Int): Color {
         Color(0xFFFF6D00),
         Color(0xFFFF3D00),
         Color(0xFFD32F2F),
-        Color(0xFF880808)  //ciemny czerwień
+        Color(0xFF880808)  // ciemny czerwień
     )
     return colors.getOrElse(level - 1) { Color.Gray }
 }
@@ -72,7 +72,7 @@ fun WeeklySummaryScreen(
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
 
-            // Grafika asystenta
+            //Grafika asystenta
             item {
                 val painter = when (weekQuality) {
                     "bad"   -> painterResource(R.drawable.assistant_summary_bad)
@@ -86,7 +86,7 @@ fun WeeklySummaryScreen(
                 )
             }
 
-            // ── Statystyki tygodnia ────────────────────────────────────
+            //── Statystyki tygodnia ────────────────────────────────────
             if (dayStats.isNotEmpty()) {
                 item {
                     Text(
@@ -132,7 +132,7 @@ fun WeeklySummaryScreen(
                     }
                 }
 
-                // Per-day breakdown
+                //  Per-day breakdown
                 items(dayStats, key = { it.dayMillis }) { day ->
                     val progress = if (day.totalPlanned > 0)
                         day.completed.toFloat() / day.totalPlanned else 0f
@@ -186,7 +186,7 @@ fun WeeklySummaryScreen(
                 }
             }
 
-            // ── Recenzja zadan AI ──────────────────────────────────────
+            //── Recenzja zadan AI ──────────────────────────────────────
             if (aiTasksForReview.isNotEmpty()) {
                 item {
                     Spacer(Modifier.height(4.dp))
@@ -235,7 +235,7 @@ fun WeeklySummaryScreen(
 
                             Spacer(Modifier.height(8.dp))
 
-                            // Poziom trudnosci
+                            //  Poziom trudnosci
                             Text("Poziom trudnosci (1-10)", style = MaterialTheme.typography.labelMedium)
                             Spacer(Modifier.height(4.dp))
                             FlowRow(

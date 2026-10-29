@@ -35,8 +35,8 @@ import java.util.*
 import kotlin.math.sin
 import kotlin.random.Random
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Pager wrapper — swipe between days like a photo gallery
+//─────────────────────────────────────────────────────────────────────────────
+//  Pager wrapper - swipe between days like a photo gallery
 // ─────────────────────────────────────────────────────────────────────────────
 
 private const val PAGER_PAGE_COUNT = 731  // ~1 year each direction
@@ -46,7 +46,7 @@ private const val PAGER_INITIAL_PAGE = 365
 @Composable
 fun DayDetailsPager(
     initialDay: Long,
-    // Data provider callbacks — called per displayed page
+    // Data provider callbacks - called per displayed page
     historyProvider: @Composable (day: Long) -> List<TaskHistoryEntity>,
     aiTasksProvider: @Composable (day: Long) -> List<AiDailyTask>,
     mandatoryTasksProvider: @Composable (day: Long) -> List<TaskEntity>,
@@ -172,8 +172,8 @@ fun DayDetailsPager(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DayDetailsContent — the actual day content (previously DayDetailsScreen body)
-// ─────────────────────────────────────────────────────────────────────────────
+// DayDetailsContent - the actual day content (previously DayDetailsScreen body)
+//─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun DayDetailsContent(
@@ -227,8 +227,8 @@ private fun DayDetailsContent(
         else stepGoalsMap.entries.filter { it.key in mandatoryStepsIds || history.any { h -> h.taskId == it.key } }
     }
 
-    // FIXME: poprzednio filtrowano !isAIGenerated — przez co mandatory+AI taski
-    // nie były usuwane z planu dnia po wykonaniu. Teraz liczymy wszystkie ukończone.
+    //  FIXME: poprzednio filtrowano !isAIGenerated - przez co mandatory+AI taski
+    //nie były usuwane z planu dnia po wykonaniu. Teraz liczymy wszystkie ukończone
     val doneMandatoryTaskIds = remember(history) {
         history.filter { it.completed }.map { it.taskId }.toSet()
     }
@@ -255,10 +255,10 @@ private fun DayDetailsContent(
     val planSize = remember(stepsTasksForDay, deferredRunsForDay, aiTasks, pendingMandatoryForDay) {
         stepsTasksForDay.size + deferredRunsForDay.size + aiTasks.size + pendingMandatoryForDay.size
     }
-    // Cel dnia = liczba zadań w planie: AI + obowiązkowe na ten dzień + odroczone (np. bieg).
+    //Cel dnia = liczba zadań w planie: AI + obowiązkowe na ten dzień + odroczone (np. bieg)
     // Mandatoryjne zadania krokowe są już w mandatoryTasksForDay, więc liczymy tylko te
-    // krokowe, których tam NIE ma (wcześniej całe stepsTasksForDay liczyło się podwójnie).
-    // mandatoryTasksForDay jest zdeduplikowane po id na poziomie providera.
+    //krokowe, których tam NIE ma (wcześniej całe stepsTasksForDay liczyło się podwójnie)
+    // mandatoryTasksForDay jest zdeduplikowane po id na poziomie providera
     val extraStepsCount = remember(stepsTasksForDay, mandatoryStepsIds) {
         stepsTasksForDay.count { it.key !in mandatoryStepsIds }
     }
@@ -319,7 +319,7 @@ private fun DayDetailsContent(
             }
         }
 
-        // ── Plan dnia ──────────────────────────────────────────────────
+        //  ── Plan dnia ──────────────────────────────────────────────────
         if (!isPast && hasPlan) {
             item {
                 Spacer(Modifier.height(4.dp))
@@ -342,7 +342,7 @@ private fun DayDetailsContent(
                 )
             }
 
-            // 2. Odroczone biegi
+            //  2. Odroczone biegi
             items(deferredRunsForDay) { entry ->
                 val distanceKm = entry.note?.let {
                     Regex("Dystans: ([\\d.]+) km").find(it)?.groupValues?.get(1)?.toFloatOrNull()
@@ -528,7 +528,7 @@ private fun DayDetailsContent(
                 val isStepsTask = goal > 0
                 val stepsCompleted = entry.stepsCompleted
 
-                // Rozróżnienie: odroczone/niedokończone vs. niewykonane
+                //  Rozróżnienie: odroczone/niedokończone vs. niewykonane
                 val isDeferred = entry.note?.contains("(odroczone)") == true
                 val isIncomplete = !entry.completed && !isDeferred
                 val cardColor = when {
@@ -620,8 +620,8 @@ private fun DayDetailsContent(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Karta krokow — zywe dane lub ukonczone
+//─────────────────────────────────────────────────────────────────────────────
+// Karta krokow - zywe dane lub ukonczone
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
@@ -686,7 +686,7 @@ private fun StepsProgressCard(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AnimatedProgressBar
+//AnimatedProgressBar
 // ─────────────────────────────────────────────────────────────────────────────
 
 data class FlameParticle(

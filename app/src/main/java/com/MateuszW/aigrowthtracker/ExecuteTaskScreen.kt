@@ -31,7 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 
-// ─────────────────────────────────────────────────────────────────────────────
+//─────────────────────────────────────────────────────────────────────────────
 // HoldButton
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -50,7 +50,7 @@ fun HoldButton(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ExecuteTaskScreen
+//ExecuteTaskScreen
 // ─────────────────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,7 +73,7 @@ fun ExecuteTaskScreen(
     hcNoDataSource: Boolean,
     hcRefreshing: Boolean,
     hcDiagnostics: HcDiagnostics?,
-    // ── Callbacki ──
+    //── Callbacki ──
     onStartTask: (TaskEntity, android.content.Context) -> Unit,
     onFinishTask: () -> Unit,
     onCancelTask: () -> Unit,
@@ -89,7 +89,7 @@ fun ExecuteTaskScreen(
     onSaveStepsCountingPrefs: (mode: String, dontAskAgain: Boolean) -> Unit,
     onRequestHcPermission: () -> Unit,
     onRefreshSteps: () -> Unit,
-    // Osobny callback dla zadań STEPS — finishTaskWithSummary nie działa bo _activeTask=null
+    // Osobny callback dla zadań STEPS - finishTaskWithSummary nie działa bo _activeTask=null
     onFinishStepsTask: (task: TaskEntity, stepsCompleted: Long, rating: Int, note: String) -> Unit,
     onAiTaskDone: (TaskHistoryEntity) -> Unit,
     onResumeRun: (entry: TaskHistoryEntity, remainingKm: Float) -> Unit = { _, _ -> },
@@ -107,28 +107,28 @@ fun ExecuteTaskScreen(
     var rolledTask by remember { mutableStateOf<TaskEntity?>(null) }
     var showRollDialog by remember { mutableStateOf(false) }
 
-    // Dialog oceny – dla zadań timerowych
+    //Dialog oceny - dla zaadń timerowych
     var showTimerSummaryDialog by remember { mutableStateOf(false) }
-    // Dialog oceny – dla zadań STEPS (ukończenie ręczne)
+    // Dialog oceny - dla zadań STEPS (ukończenie ręczne)
     var showStepsSummaryDialog by remember { mutableStateOf(false) }
     var summaryTargetTask by remember { mutableStateOf<TaskEntity?>(null) }
 
     // Dialog wyboru trybu krokomierza
     var showStepsModeDialog by remember { mutableStateOf(false) }
     var stepsModeTargetTask by remember { mutableStateOf<TaskEntity?>(null) }
-    // Snackbar "od razu zaliczone"
+    //Snackbar "od razu zaliczone"
     var showInstantCompletionSnack by remember { mutableStateOf(false) }
 
     var rating by remember { mutableStateOf(0) }
     var note by remember { mutableStateOf("") }
     val context = LocalContext.current
 
-    // LOG #2 — wartość kroków docierająca do ekranu
+    //  LOG #2 - wartość kroków docierająca do ekranu
     LaunchedEffect(todaySteps) {
         Log.d("Steps", "[ExecuteTaskScreen] todaySteps=$todaySteps stepsBaselines=$stepsBaselines")
     }
 
-    // Zadania STEPS uruchomione ręcznie przez użytkownika (Room lub in-memory baseline)
+    //  Zadania STEPS uruchomione ręcznie przez użytkownika (Room lub in-memory baseline)
     val manuallyStartedStepsTasks = remember(stepsBaselines, tasks) {
         tasks.filter { it.taskType == "STEPS" &&
             (it.stepsBaseline != null || stepsBaselines.containsKey(it.id)) }
@@ -212,7 +212,7 @@ fun ExecuteTaskScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            // Cytat asystenta
+            //  Cytat asystenta
             if (!weeklyQuote.isNullOrBlank()) {
                 AssistantSpeechBubble(
                     painter = painterResource(R.drawable.assistant_execute),
@@ -220,14 +220,14 @@ fun ExecuteTaskScreen(
                 )
             }
 
-            // Przycisk planowania
+            //Przycisk planowania
             if (!weekPlanned) {
                 Button(onClick = onPlanWeek, modifier = Modifier.fillMaxWidth()) {
                     Text("Pozwól asystentowi zaplanować tydzień")
                 }
             }
 
-            // ── Baner uprawnień Health Connect ────────────────────────────
+            //  ── Baner uprawnień Health Connect ────────────────────────────
             if (hcPermissionNeeded) {
                 Card(
                     colors = CardDefaults.cardColors(
@@ -256,7 +256,7 @@ fun ExecuteTaskScreen(
                 }
             }
 
-            // ── Baner: uprawnienie OK, ale HC nie ma źródła danych ────────
+            //  ── Baner: uprawnienie OK, ale HC nie ma źródła danych ────────
             if (!hcPermissionNeeded && hcNoDataSource) {
                 Card(
                     colors = CardDefaults.cardColors(
@@ -292,7 +292,7 @@ fun ExecuteTaskScreen(
                 }
             }
 
-            // ── Sekcja "Zadania w toku" ───────────────────────────────────
+            //── Sekcja "Zadania w toku" ───────────────────────────────────
             if (hasInProgress) {
                 Text("Zadania w toku", style = MaterialTheme.typography.titleMedium)
 
@@ -383,7 +383,7 @@ fun ExecuteTaskScreen(
                     }
                 }
 
-                // 1. Zadania obowiązkowe aktywne dziś (tylko STEPS)
+                //1. Zadania obowiązkowe aktywne dziś (tylko STEPS)
                 stepsActiveTodayTasks.forEach { task ->
                     val isSteps = task.taskType == "STEPS"
                     val goal = task.stepGoal?.toFloat() ?: 1f
@@ -391,7 +391,7 @@ fun ExecuteTaskScreen(
                     val stepsStarted = isSteps && task.stepsBaseline != null
 
                     if (isSteps && !stepsStarted && !completed) {
-                        // STEPS task nie uruchomione jeszcze → karta z przyciskiem "Rozpocznij"
+                        //  STEPS task nie uruchomione jeszcze → karta z przyciskiem "Rozpocznij"
                         InProgressCard(
                             title = task.taskName,
                             subtitle = "Kroków dziś: $todaySteps",
@@ -410,7 +410,7 @@ fun ExecuteTaskScreen(
                             onDone = null
                         )
                     } else {
-                        // Zadanie STEPS uruchomione lub zadanie nie-STEPS
+                        //  Zadanie STEPS uruchomione lub zadanie nie-STEPS
                         val baseline = task.stepsBaseline ?: 0L
                         val isMidnight = !isSteps || task.stepsCountingMode == "FROM_MIDNIGHT" || baseline == 0L
                         val rawProgress = when {
@@ -493,7 +493,7 @@ fun ExecuteTaskScreen(
                     )
                 }
 
-                // 3. Zadania STEPS ręcznie uruchomione (nie zaplanowane na dziś)
+                //3. Zadania STEPS ręcznie uruchomione (nie zaplanowane na dziś)
                 manuallyStartedStepsTasks.forEach { task ->
                     val baseline = task.stepsBaseline ?: stepsBaselines[task.id] ?: 0L
                     val isMidnight = task.stepsCountingMode == "FROM_MIDNIGHT" || baseline == 0L
@@ -522,7 +522,7 @@ fun ExecuteTaskScreen(
                 HorizontalDivider()
             }
 
-            // ── Zadania tygodniowe (rozwijana sekcja) ─────────────────────
+            //── Zadania tygodniowe (rozwijana sekcja) ─────────────────────
             val isInPlannedWeek = remember(plannedWeekStartMillis) {
                 val now = System.currentTimeMillis()
                 plannedWeekStartMillis != null &&
@@ -587,7 +587,7 @@ fun ExecuteTaskScreen(
 
             HorizontalDivider()
 
-            // ── Losowanie ─────────────────────────────────────────────────
+            //── Losowanie ─────────────────────────────────────────────────
             Text("Losuj zadanie", style = MaterialTheme.typography.titleMedium)
             var expanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
@@ -699,7 +699,7 @@ fun ExecuteTaskScreen(
                             }
                         }
 
-                        // AI Instruction card
+                        //AI Instruction card
                         if (task.isAIGenerated && aiTaskInstruction != null && aiTaskInstruction.taskId == task.id) {
                             Spacer(Modifier.height(8.dp))
                             Card(
@@ -742,7 +742,7 @@ fun ExecuteTaskScreen(
                             }
                         }
 
-                        // Progress bar dla zadań STEPS — renderuje się zawsze gdy stepGoal > 0
+                        //Progress bar dla zadań STEPS - renderuje się zawsze gdy stepGoal > 0
                         if (isSteps) {
                             val stepGoal = task.stepGoal ?: 0
                             val baseline = task.stepsBaseline ?: stepsBaselines[task.id] ?: 0L
@@ -751,7 +751,7 @@ fun ExecuteTaskScreen(
                             } else {
                                 (todaySteps - baseline).coerceAtLeast(0L)
                             }
-                            // LOG #3 — wyliczenie progress w liście zadań
+                            //  LOG #3 - wyliczenie progress w liście zadań
                             LaunchedEffect(todaySteps, baseline) {
                                 Log.d(
                                     "Steps",
@@ -787,7 +787,7 @@ fun ExecuteTaskScreen(
         }
     }
 
-    // ── Dialogi ──────────────────────────────────────────────────────────────
+    //  ── Dialogi ──────────────────────────────────────────────────────────────
 
     if (showRollDialog && rolledTask != null) {
         AlertDialog(
@@ -829,13 +829,13 @@ fun ExecuteTaskScreen(
                 val baseline = task.stepsBaseline ?: stepsBaselines[task.id] ?: 0L
                 val isMidnight = task.stepsCountingMode == "FROM_MIDNIGHT" || baseline == 0L
                 val stepsCount = if (isMidnight) todaySteps else (todaySteps - baseline).coerceAtLeast(0L)
-                // LOG #3 — wyliczenie stepsCount przy ukończeniu
+                //  LOG #3 - wyliczenie stepsCount przy ukończeniu
                 Log.d(
                     "Steps",
                     "[STEPS dialog confirm] task=${task.taskName} " +
                     "todaySteps=$todaySteps baseline=$baseline stepsCount=$stepsCount rating=$r"
                 )
-                // POPRAWKA: onFinishStepsTask zamiast onFinishTaskWithSummary
+                //  POPRAWKA: onFinishStepsTask zamiast onFinishTaskWithSummary
                 // (onFinishTaskWithSummary używa _activeTask który = null dla STEPS)
                 onFinishStepsTask(task, stepsCount, r, n)
                 showStepsSummaryDialog = false
@@ -850,7 +850,7 @@ fun ExecuteTaskScreen(
         )
     }
 
-    // Dialog wyboru trybu krokomierza
+    //  Dialog wyboru trybu krokomierza
     Log.d("StepsDialog", "[RENDER] showStepsModeDialog=$showStepsModeDialog target=${stepsModeTargetTask?.taskName}")
     if (showStepsModeDialog && stepsModeTargetTask != null) {
         Log.d("StepsDialog", "[RENDER] SHOWING StepsModeDialog for ${stepsModeTargetTask!!.taskName}")
@@ -962,7 +962,7 @@ private fun StepsModeDialog(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Karta zadania w toku — z widocznym progress barem
+// Karta zadania w toku - z widocznym progress barem
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
@@ -1005,7 +1005,7 @@ private fun InProgressCard(
             }
             Spacer(Modifier.height(8.dp))
 
-            // Wyraźny progress bar — 10 dp wysokości
+            // Wyraźny progress bar - 10 dp wysokości
             LinearProgressIndicator(
                 progress = { animatedProgress },
                 modifier = Modifier
@@ -1049,8 +1049,8 @@ private fun InProgressCard(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Dialog oceny (wspólny dla timerowych i STEPS)
+//  ─────────────────────────────────────────────────────────────────────────────
+//  Dialog oceny (wspólny dla timerowych i STEPS)
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
@@ -1104,9 +1104,9 @@ private fun SummaryDialog(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HcDebugCard — pełna diagnostyka Health Connect
-// Usuń lub ukryj po zidentyfikowaniu problemu z krokami.
-// ─────────────────────────────────────────────────────────────────────────────
+//  HcDebugCard - pełna diagnostyka Health Connect
+// Usuń lub ukryj po zidentyfikowaniu problemu z krokami
+//─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun HcDebugCard(diag: HcDiagnostics?) {

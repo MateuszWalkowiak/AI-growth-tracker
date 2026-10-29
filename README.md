@@ -1,117 +1,105 @@
 # AI Growth Tracker
 
-Aplikacja Android do planowania, sledzenia i analizowania codziennych zadan rozwojowych. Wykorzystuje AI (Gemini) do generowania spersonalizowanych planow tygodniowych, integruje sie z Firebase i oferuje modul sledzenia biegow z mapa (Mapbox).
+Androidowa apka do ogarniania własnego rozwoju - planujesz zadania, odhaczasz je, a na koniec tygodnia dostajesz od AI (Gemini) rozpiskę na kolejny. Zaczęło się od prostego trackera zadań, a skończyło na czymś, co ma kalendarz, statystyki, logowanie, powiadomienia i nawet tracking biegów z mapą. Projekt robiłem solo, w połowie na własny użytek, w połowie na zaliczenie projektu na Politechnice Poznańskiej
 
-## Funkcjonalnosci
+<p align="center">
+  <img src="screenshots/main_screen.png" width="260">
+</p>
 
-- **Kalendarz z postepami** — widok miesiczny z kolorowym oznaczeniem progresu na kazdy dzien
-- **Zadania z timerem** — tworzenie zadan z kategoriami, priorytetami i minutnikiem wykonania
-- **Tygodniowy plan AI** — asystent Gemini generuje plan na tydzien z uwzglednieniem swiat i weekendow
-- **Statystyki** — wykresy postepow, podsumowania tygodniowe i dzienne
-- **Sledzenie biegow** — GPS tracking z mapa trasy (Mapbox), historia treningow
-- **Powiadomienia** — przypomnienia o zaplanowanych zadaniach
-- **Firebase Auth** — logowanie i synchronizacja danych miedzy urzadzeniami
-- **Health Connect** — integracja z krokomierzem
+## O co chodzi
 
-## Stack technologiczny
+Pomysł był banalny: chciałem coś, co nie tylko trzyma listę "to-do", ale faktycznie pomaga trzymać się planu.
 
-| Warstwa | Technologia |
-|---|---|
-| UI | Jetpack Compose + Material 3 |
-| Architektura | MVVM (ViewModel + StateFlow) |
-| Baza danych | Room (SQLite) |
-| Backend | Firebase Auth + Firestore |
-| AI | Google Gemini API |
-| Mapy | Mapbox SDK |
-| Swieta | Calendarific API |
-| HTTP | Retrofit + Gson |
-| Lokalizacja | Google Play Services Location |
+## Funkcje
 
-## Wymagania
+- **Kalendarz z progresem** - widok miesiąca, każdy dzień koloruje się zależnie od tego, ile ogarnąłeś
+- **Zadania z timerem** - tworzysz zadanie z kategorią i priorytetem, odpalasz minutnik i robisz swoje
+- **Plan tygodniowy od AI** - w niedzielę asystent (Gemini) generuje plan na kolejny tydzień, uwzględniając przy tym święta i weekendy
+- **Statystyki** - wykresy postępów + podsumowania dzienne i tygodniowe
+- **Tracking biegów** - GPS, trasa na mapie (Mapbox), historia treningów - w planach podpięcie API strava
+- **Powiadomienia** - przypomnienia o zaplanowanych zadaniach
+- **Firebase** - logowanie i synchronizacja danych między urządzeniami
+- **Health Connect** - podpięcie pod krokomierz
 
-- Android Studio Hedgehog (2023.1.1) lub nowsze
-- Android SDK 35 (min SDK 26)
-- JDK 11
+## Czym to spięte
 
-## Konfiguracja kluczy API
+Stack, który przy okazji użyłem od strony praktycznej:
 
-Aplikacja korzysta z kilku zewnetrznych serwisow. Przed zbudowaniem projektu musisz skonfigurowac odpowiednie klucze:
+- **UI** - Jetpack Compose + Material 3
+- **Architektura** - MVVM (ViewModel + StateFlow)
+- **Baza lokalna** - Room (SQLite)
+- **Backend** - Firebase Auth + Firestore
+- **AI** - Google Gemini (`gemini-2.5-flash`)
+- **Mapy** - Mapbox SDK
+- **Święta** - Calendarific API
+- **Sieć** - Retrofit + Gson
+- **Lokalizacja** - Google Play Services Location
 
-### 1. Firebase
+## Zrzuty ekranu
 
-1. Utworz projekt w [Firebase Console](https://console.firebase.google.com/)
-2. Dodaj aplikacje Android z package name `com.MateuszW.aigrowthtracker`
-3. Pobierz plik `google-services.json`
-4. Umiesc go w katalogu `app/`
+| Ekran główny | Wykonywanie zadania | Statystyki |
+|:---:|:---:|:---:|
+| <img src="screenshots/main_screen.png" width="230"/> | <img src="screenshots/wykonaj_zadanie.png" width="230"> | <img src="screenshots/statystyki.png" width="230"> |
 
-> Plik `google-services.json` jest juz dodany do `app/.gitignore` — nie trafi do repozytorium.
+### Niedzielny flow - podsumowanie tygodnia
 
-### 2. Calendarific (Holiday API)
+| Ocena tygodnia | Statystyki tygodnia | Plan na kolejny |
+|:---:|:---:|:---:|
+| <img src="screenshots/podsumowanie_tygodnia1.png" width="230"> | <img src="screenshots/podsumowanie_tygodnia2.png" width="230"> | <img src="screenshots/podsumowanie_tygodnia3.png" width="230"> |
 
-1. Zarejestruj sie na [calendarific.com](https://calendarific.com/) i pobierz klucz API
-2. Dodaj do pliku `local.properties` w katalogu glownym projektu:
-   ```properties
-   HOLIDAY_API_KEY=twoj_klucz_calendarific
-   ```
+## Jak odpalić
 
-### 3. Mapbox
+Android Studio (najlepiej najnowsze) i SDK 35, min SDK 26. Apka korzysta z kilku zewnętrznych serwisów, więc przed buildem trzeba wrzucić własne klucze - żaden z nich nie siedzi w repo
 
-1. Utworz konto na [mapbox.com](https://www.mapbox.com/)
-2. Wygeneruj public access token
-3. Dodaj do pliku `local.properties`:
-   ```properties
-   MAPBOX_ACCESS_TOKEN=pk.twoj_token_mapbox
-   ```
+**1. Firebase**
+Zakładasz projekt w [Firebase Console](https://console.firebase.google.com/), dodajesz apkę Androida z package name `com.MateuszW.aigrowthtracker`, pobierasz `google-services.json` i wrzucasz go do katalogu `app/`
 
-### 4. Gemini (Google AI)
-
-1. Wygeneruj klucz API w [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Klucz wpisujesz **w aplikacji** w ekranie Ustawienia — nie jest przechowywany w kodzie zrodlowym
-
-### Przykladowy `local.properties`
+**2. Calendarific + Mapbox**
+Do pliku `local.properties` (w głównym katalogu projektu) dorzucasz:
 
 ```properties
 sdk.dir=C\:\\Users\\TwojUser\\AppData\\Local\\Android\\Sdk
-HOLIDAY_API_KEY=twoj_klucz_calendarific
-MAPBOX_ACCESS_TOKEN=pk.twoj_token_mapbox
+HOLIDAY_API_KEY=twoj_klucz_z_calendarific
+MAPBOX_ACCESS_TOKEN=pk.twoj_public_token_z_mapbox
 ```
 
-> **Uwaga:** Plik `local.properties` jest w `.gitignore` i nigdy nie powinien byc commitowany.
+Klucze wyklepiesz tu: [calendarific.com](https://calendarific.com/) i [mapbox.com](https://www.mapbox.com/)
 
-## Budowanie projektu
+**3. Gemini**
+Tego nie wpisujesz do kodu - klucz z [Google AI Studio](https://aistudio.google.com/app/apikey) wklejasz bezpośrednio w apce, w ekranie ustawień
+
+I tyle - albo z Android Studio klikasz Run, albo z terminala:
 
 ```bash
-# Klonowanie repozytorium
 git clone https://github.com/MateuszWalkowiak/AI-growth-tracker.git
 cd AI-growth-tracker
-
-# Skonfiguruj klucze (patrz sekcja wyzej)
-# Umiesc google-services.json w app/
-
-# Zbuduj projekt
 ./gradlew assembleDebug
 ```
 
-Alternatywnie otworz projekt w Android Studio i uruchom na emulatorze lub fizycznym urzadzeniu.
-
-## Struktura projektu
+## Jak to poukładane
 
 ```
 app/src/main/java/com/MateuszW/aigrowthtracker/
-├── MainActivity.kt              # Punkt wejscia, nawigacja
-├── MainScreen.kt                # Ekran glowny z kalendarzem
-├── AddTaskScreen.kt             # Dodawanie nowego zadania
-├── ExecuteTaskScreen.kt         # Wykonywanie zadania z timerem
-├── TaskDetailsScreen.kt         # Szczegoly zadania
-├── DayDetailsScreen.kt          # Podsumowanie dnia
-├── StatisticsScreen.kt          # Wykresy i statystyki
-├── SettingsScreen.kt            # Ustawienia aplikacji
-├── LoginScreen.kt               # Ekran logowania (Firebase)
-├── WeeklyPreviewScreen.kt       # Podglad planu tygodniowego
-├── WeeklySummaryScreen.kt       # Podsumowanie tygodnia
-├── WeeklyContinuationScreen.kt  # Kontynuacja planu
-├── HolidayAdjustmentScreen.kt   # Dostosowanie do swiat
-├── TaskViewModel.kt             # Glowny ViewModel
-├── data/                        # Room entities, DAO, Firebase repo
-└── running/                     # Modul sledzenia biegow (GPS + Mapbox)
+├── MainActivity.kt          # wejście + nawigacja
+├── MainScreen.kt            # ekran główny z kalendarzem
+├── AddTaskScreen.kt         # dodawanie zadania
+├── ExecuteTaskScreen.kt     # wykonywanie zadania z timerem
+├── StatisticsScreen.kt      # wykresy i statystyki
+├── SettingsScreen.kt        # ustawienia
+├── LoginScreen.kt           # logowanie (Firebase)
+├── Weekly*Screen.kt         # cały niedzielny flow planu tygodniowego
+├── TaskViewModel.kt         # główny ViewModel (serce apki)
+├── data/                    # Room (entities, DAO) + repo Firebase
+└── running/                 # moduł biegania (GPS + Mapbox)
 ```
+
+## Czego się przy tym nauczyłem
+
+- Jetpack Compose od zera - kilkanaście ekranów i sensowna nawigacja
+- spięcie lokalnej bazy (Room) z chmurą (Firestore) + synchronizacja
+- praca z zewnętrznym modelem AI i optymalizacja requestów API
+- foreground service do trackingu GPS, który nie "umiera" w tle
+
+## Status
+
+Projekt osobisty / do nauki - rozwijany po godzinach. Działa, ale miejsce na improvement zawsze się znajdzie

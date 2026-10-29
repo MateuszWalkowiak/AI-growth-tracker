@@ -18,9 +18,9 @@ data class TaskHistoryEntity(
     val isAIGenerated: Boolean = false,
     val aiMainName: String? = null,
     val difficulty: Int? = null,
-    // Liczba kroków wykonanych przy ukończeniu zadania STEPS (null dla innych typów)
+    //  Liczba kroków wykonanych przy ukończeniu zadania STEPS (null dla innych typów)
     val stepsCompleted: Long? = null,
-    // Tekst instrukcji wygenerowanych przez AI (zapisywany przy starcie zadania z AI support)
+    //Tekst instrukcji wygenerowanych przez AI (zapisywany przy starcie zadania z AI support)
     val aiInstructions: String? = null
 )
 

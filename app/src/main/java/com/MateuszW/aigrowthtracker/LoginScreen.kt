@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.MateuszW.aigrowthtracker.data.AuthManager
 import com.MateuszW.aigrowthtracker.ui.theme.BearOrange
 
-// ── Validation helpers ──────────────────────────────────────────────────────
+//  ── Validation helpers ──────────────────────────────────────────────────────
 
 private fun validateEmail(email: String): String? {
     if (email.isBlank()) return "Podaj adres email"
@@ -84,7 +84,7 @@ fun LoginScreen() {
     val keyboardController = LocalSoftwareKeyboardController.current
 
     fun submit() {
-        // Clear previous errors
+        //Clear previous errors
         generalError = null
         emailError = validateEmail(email)
         passwordError = validatePassword(password, !isLogin)
@@ -154,7 +154,7 @@ fun LoginScreen() {
 
             Spacer(Modifier.height(48.dp))
 
-            // ── Mode toggle ──────────────────────────────────────────
+            //  ── Mode toggle ──────────────────────────────────────────
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -198,7 +198,7 @@ fun LoginScreen() {
 
             Spacer(Modifier.height(24.dp))
 
-            // ── General error ────────────────────────────────────────
+            //── General error ────────────────────────────────────────
             AnimatedVisibility(
                 visible = generalError != null,
                 enter = fadeIn(tween(200)) + expandVertically(tween(200)),
@@ -248,7 +248,7 @@ fun LoginScreen() {
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Password field ───────────────────────────────────────
+            //── Password field ───────────────────────────────────────
             OutlinedTextField(
                 value = password,
                 onValueChange = {
@@ -290,7 +290,7 @@ fun LoginScreen() {
 
             Spacer(Modifier.height(28.dp))
 
-            // ── Submit button ────────────────────────────────────────
+            //  ── Submit button ────────────────────────────────────────
             Button(
                 onClick = { submit() },
                 modifier = Modifier
@@ -316,7 +316,7 @@ fun LoginScreen() {
 
             Spacer(Modifier.height(16.dp))
 
-            // ── Switch mode text ─────────────────────────────────────
+            //  ── Switch mode text ─────────────────────────────────────
             TextButton(
                 onClick = {
                     isLogin = !isLogin

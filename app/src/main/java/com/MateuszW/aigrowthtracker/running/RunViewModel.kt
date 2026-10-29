@@ -98,7 +98,7 @@ class RunViewModel(
             val isGoalReached = goalReached
 
             // Usuń stary wpis odroczonego biegu (completed=false + "(odroczone)") z dzisiejszej historii
-            // — po ukończeniu biegu nie ma sensu trzymać dwóch wpisów
+            //- po ukończeniu biegu nie ma sensu trzymać dwóch wpisów
             val cal = java.util.Calendar.getInstance()
             cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
             cal.set(java.util.Calendar.MINUTE, 0)
@@ -112,7 +112,7 @@ class RunViewModel(
                 .filter { it.taskId == session.taskId && !it.completed && it.note?.contains("(odroczone)") == true }
                 .forEach { deferred ->
                     taskHistoryDao.deleteById(deferred.id)
-                    // Usuń też z Firebase
+                    //  Usuń też z Firebase
                     val userId = AuthManager.getUserId()
                     if (userId != null) {
                         FirebaseRepository.db
@@ -201,7 +201,7 @@ class RunViewModel(
                 append(" | Czas: ${formatDuration(duration)} (odroczone)")
             }
 
-            // Wpis odroczonego biegu na nowy termin (move semantics — nie klonuj)
+            // Wpis odroczonego biegu na nowy termin (move semantics - nie klonuj)
             if (daysOffset > 0) {
                 val cal = java.util.Calendar.getInstance().apply {
                     add(java.util.Calendar.DAY_OF_YEAR, daysOffset)
@@ -224,7 +224,7 @@ class RunViewModel(
                 taskHistoryDao.insert(deferredEntry)
                 syncHistoryToFirebase(deferredEntry)
             } else {
-                // daysOffset == 0 ("dzisiaj") — zachowaj jako odroczone na dziś
+                //  daysOffset == 0 ("dzisiaj") - zachowaj jako odroczone na dziś
                 val cal = java.util.Calendar.getInstance().apply {
                     set(java.util.Calendar.HOUR_OF_DAY, 12)
                     set(java.util.Calendar.MINUTE, 0)
@@ -245,7 +245,7 @@ class RunViewModel(
                 taskHistoryDao.insert(deferredEntry)
                 syncHistoryToFirebase(deferredEntry)
             }
-            // Nie tworzymy osobnego wpisu "niedokończone" na dziś — bieg przeniesiony
+            //Nie tworzymy osobnego wpisu "niedokończone" na dziś - bieg przeniesiony
             onComplete(distanceKm, targetKm)
         }
     }
@@ -297,13 +297,13 @@ class RunViewModel(
 
     /**
      * Pobiera historię biegów z Firebase i wpisuje do lokalnej bazy.
-     * Idempotentne — istniejące sesje (po syncId) są pomijane.
-     * Wywoływać przy starcie aplikacji jeśli lokalna baza jest pusta.
+     * Idempotentne - istniejące sesje (po syncId) są pomijane.
+     * Wywoływać przy starcie aplikacji jeśli lokalna baza jest pusta
      */
     fun loadRunsFromFirebase() {
         viewModelScope.launch {
             val userId = AuthManager.getUserId() ?: return@launch
-            // Sync tylko jeśli lokalna baza jest pusta — żeby nie nadpisywać aktywnych sesji
+            //Sync tylko jeśli lokalna baza jest pusta - żeby nie nadpisywać aktywnych sesji
             if (runDao.getSessionCount() > 0) return@launch
             try {
                 val snapshot = FirebaseRepository.db

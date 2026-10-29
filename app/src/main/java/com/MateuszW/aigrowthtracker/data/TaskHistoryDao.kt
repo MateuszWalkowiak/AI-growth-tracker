@@ -46,7 +46,7 @@ interface TaskHistoryDao {
     suspend fun getAllHistoryOnce(): List<TaskHistoryEntity>
 
     @Query("SELECT MIN(date) FROM task_history WHERE taskId != -1")
-    suspend fun getRealFirstDate(): Long? //funkcja pomocnicza tymczasowa
+    suspend fun getRealFirstDate(): Long? //  funkcja pomocnicza tymczasowa
 
     @Query("DELETE FROM task_history WHERE taskId = :taskId")
     suspend fun deleteHistoryForTask(taskId: Int)

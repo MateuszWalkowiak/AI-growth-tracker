@@ -9,9 +9,9 @@ import androidx.room.PrimaryKey
  * Generowane przez algorytm scheduling w TaskViewModel.
  * date = start-of-day (północ) w milisekundach lokalnej strefy.
  *
- * UNIQUE(taskId, date) gwarantuje że jedno zadanie ma maks. jeden wpis na dany dzień —
+ * UNIQUE(taskId, date) gwarantuje że jedno zadanie ma maks. jeden wpis na dany dzień -
  * bez tego OnConflictStrategy.IGNORE nie miało żadnego efektu i równoległe rozpisywanie
- * (sync + regenerate) tworzyło zdublowane wiersze.
+ * (sync + regenerate) tworzyło zdublowane wiersze
  */
 @Entity(
     tableName = "mandatory_schedule",

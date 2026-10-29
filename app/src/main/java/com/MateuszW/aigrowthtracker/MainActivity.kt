@@ -85,9 +85,9 @@ class MainActivity : ComponentActivity() {
                 }
                 val context = LocalContext.current
                 val db = remember { AppDatabase.getDatabase(context) }
-                // Sync historii z Firebase — ZAWSZE przy zmianie konta (lub starcie)
-                // Czyści lokalną historię i wczytuje aktualną z Firebase,
-                // żeby uniknąć pozostałości z poprzedniego konta.
+                //Sync historii z Firebase - ZAWSZE przy zmianie konta (lub starcie)
+                //Czyści lokalną historię i wczytuje aktualną z Firebase,
+                //żeby uniknąć pozostałości z poprzedniego konta
                 LaunchedEffect(user?.uid) {
                     val userId = AuthManager.getUserId()
                     if (userId != null) {
@@ -99,7 +99,7 @@ class MainActivity : ComponentActivity() {
                                 .get()
                                 .await()
 
-                            // Wyczyść lokalną historię i wstaw dane z Firebase
+                            //Wyczyść lokalną historię i wstaw dane z Firebase
                             db.taskHistoryDao().deleteAll()
 
                             if (!remote.isEmpty) {
@@ -135,7 +135,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         } catch (_: Exception) {
-                            // Offline — zachowaj lokalne dane (jeśli jakieś istnieją)
+                            //Offline - zachowaj lokalne dane (jeśli jakieś istnieją)
                         }
                     }
                 }
@@ -172,7 +172,7 @@ class MainActivity : ComponentActivity() {
                     accountCreationDateState.value = db.taskHistoryDao().getRealFirstDate()
                     runViewModel.loadRunsFromFirebase()
 
-                    // Sync weekly tasks z Firebase — zawsze przy zmianie konta
+                    // Sync weekly tasks z Firebase - zawsze przy zmianie konta
                     try {
                         val remoteWeekly = viewModel.loadWeeklyFromFirebase()
                         db.weeklyTaskDao().clearAll()
@@ -181,7 +181,7 @@ class MainActivity : ComponentActivity() {
                             viewModel.saveWeeklyTasksLocal()
                         }
                     } catch (_: Exception) {
-                        // Offline — załaduj lokalne dane
+                        //  Offline - załaduj lokalne dane
                         val local = viewModel.loadWeeklyFromLocal()
                         if (local.isNotEmpty()) viewModel.setWeeklyTasks(local)
                     }
@@ -295,21 +295,21 @@ class MainActivity : ComponentActivity() {
                     composable("execute_task_screen") {
                         val ctx = LocalContext.current
 
-                        // ── Health Connect: launcher uprawnień ────────────────────────
+                        //  ── Health Connect: launcher uprawnień ────────────────────────
                         val hcPermissions = remember {
                             setOf(HealthPermission.getReadPermission(StepsRecord::class))
                         }
-                        // Używamy właściwego kontraktu HC — launch przyjmuje Set<String>, nie Intent
+                        //Używamy właściwego kontraktu HC - launch przyjmuje Set<String>, nie Intent
                         val hcPermissionLauncher = rememberLauncherForActivityResult(
                             PermissionController.createRequestPermissionResultContract()
                         ) { _ ->
-                            // Po powrocie z ekranu uprawnień → odczytaj kroki
+                            //  Po powrocie z ekranu uprawnień → odczytaj kroki
                             viewModel.refreshTodaySteps(ctx)
                         }
 
-                        // ── Przy wejściu na ekran: sprawdź uprawnienie, potem odczytaj ─
+                        //── Przy wejściu na ekran: sprawdź uprawnienie, potem odczytaj ─
                         LaunchedEffect(Unit) {
-                            // Rozwiąż zadania STEPS z poprzedniego dnia (po restarcie apki)
+                            //  Rozwiąż zadania STEPS z poprzedniego dnia (po restarcie apki)
                             viewModel.resolveStaleStepsTasks(ctx)
 
                             if (HealthConnectClient.getSdkStatus(ctx) == HealthConnectClient.SDK_AVAILABLE) {
@@ -325,7 +325,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        // ── Odświeżaj kroki co 30 sekund ─────────────────────────────
+                        //  ── Odświeżaj kroki co 30 sekund ─────────────────────────────
                         LaunchedEffect(Unit) {
                             while (true) {
                                 delay(30_000L)
@@ -351,7 +351,7 @@ class MainActivity : ComponentActivity() {
                         val aiInstructionLoading by viewModel.aiInstructionLoading.collectAsState()
                         val aiInstructionLoadingTaskId by viewModel.aiInstructionLoadingTaskId.collectAsState()
 
-                        // LOG #2 — przekazanie kroków do ExecuteTaskScreen
+                        //LOG #2 - przekazanie kroków do ExecuteTaskScreen
                         LaunchedEffect(todaySteps) {
                             android.util.Log.d(
                                 "Steps",
@@ -371,7 +371,7 @@ class MainActivity : ComponentActivity() {
                             aiDailyTasksAll[todayDayName] ?: emptyList()
                         }
 
-                        // Historia dzisiejszego dnia
+                        //Historia dzisiejszego dnia
                         val todayStart = remember {
                             Calendar.getInstance().apply {
                                 set(Calendar.HOUR_OF_DAY, 0)
@@ -633,7 +633,7 @@ class MainActivity : ComponentActivity() {
                             onBack = { navController.popBackStack() },
                             onLogout = {
                                 viewModel.viewModelScope.launch {
-                                    // 1. Wyczyść lokalną bazę Room (wszystkie tabele)
+                                    //1. Wyczyść lokalną bazę Room (wszystkie tabele)
                                     withContext(Dispatchers.IO) {
                                         db.clearAllTables()
                                     }
@@ -646,7 +646,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                     // 3. Reset stanu in-memory ViewModel
                                     viewModel.resetForLogout()
-                                    // 4. Wyloguj z Firebase
+                                    //  4. Wyloguj z Firebase
                                     AuthManager.auth.signOut()
                                 }
                             },
@@ -667,7 +667,7 @@ class MainActivity : ComponentActivity() {
                         var aiTasksForReview by remember { mutableStateOf<List<com.MateuszW.aigrowthtracker.data.TaskHistoryEntity>>(emptyList()) }
 
                         LaunchedEffect(Unit) {
-                            // Najpierw persystuj niewykonane zadania z planu
+                            //Najpierw persystuj niewykonane zadania z planu
                             viewModel.persistUnfinishedPlanItems(context)
                             // Potem generuj podsumowanie i laduj dane
                             if (summary.isNullOrBlank()) viewModel.generateWeeklyReviewSummary(context)
@@ -754,7 +754,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // ── BIEGANIE ─────────────────────────────────────────
+                    //  ── BIEGANIE ─────────────────────────────────────────
 
                     composable(
                         route = "running_screen?taskId={taskId}&taskName={taskName}&targetKm={targetKm}&durationMinutes={durationMinutes}&aiMainName={aiMainName}",

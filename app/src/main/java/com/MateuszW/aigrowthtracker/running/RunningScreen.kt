@@ -108,7 +108,7 @@ fun RunningScreen(
     val distanceKm = distanceMeters / 1000f
     val targetProgress = if (targetKm > 0f) (distanceKm / targetKm).coerceIn(0f, 1f) else null
 
-    // Cel osiągnięty? Dla km — distanceKm >= targetKm. Dla czasu — durationSeconds >= goal.
+    // Cel osiągnięty? Dla km - distanceKm >= targetKm. Dla czasu - durationSeconds >= goal
     val isGoalReached = when {
         targetKm > 0f -> distanceKm >= targetKm
         durationMinutes > 0 -> durationSeconds >= durationMinutes * 60L
@@ -187,7 +187,7 @@ fun RunningScreen(
                     }
                 }
 
-                // Liczba punktów GPS (debug badge w rogu)
+                //  Liczba punktów GPS (debug badge w rogu)
                 if (routePoints.isNotEmpty()) {
                     Surface(
                         modifier = Modifier
@@ -279,7 +279,7 @@ fun RunningScreen(
                                 modifier = Modifier.weight(1f)
                             ) { Text("Zakończ") }
                         }
-                        // Defer button — ukryty po osiągnięciu celu (cel zrealizowany,
+                        // Defer button - ukryty po osiągnięciu celu (cel zrealizowany,
                         // nie ma sensu odraczać)
                         if (!isGoalReached) {
                             Spacer(Modifier.height(4.dp))
@@ -310,7 +310,7 @@ fun RunningScreen(
         }
     }
 
-    // Dialog zakończenia biegu z oceną
+    //  Dialog zakończenia biegu z oceną
     if (showStopDialog) {
         AlertDialog(
             onDismissRequest = { showStopDialog = false },

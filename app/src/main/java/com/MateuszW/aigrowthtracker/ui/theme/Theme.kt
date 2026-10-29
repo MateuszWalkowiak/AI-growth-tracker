@@ -18,7 +18,7 @@ import androidx.core.view.WindowCompat
 // ── Tryb motywu: LIGHT, DARK, SYSTEM ──────────────────────────────────────
 enum class ThemeMode { LIGHT, DARK, SYSTEM }
 
-// Globalny stan motywu — ustawiany z SettingsScreen, odczytywany w AIGrowthTrackerTheme
+// Globalny stan motywu - ustawiany z SettingsScreen, odczytywany w AIGrowthTrackerTheme
 object ThemeState {
     var themeMode by mutableStateOf(ThemeMode.SYSTEM)
 }

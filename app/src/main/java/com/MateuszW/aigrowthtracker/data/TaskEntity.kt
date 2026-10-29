@@ -21,17 +21,17 @@ data class TaskEntity(
     val aiGoals: String? = null,
     val isCompleted: Boolean = false,
 
-    // "STEPS" = zadanie liczenia kroków (Health Connect), null = zadanie czasowe
+    //  "STEPS" = zadanie liczenia kroków (Health Connect), null = zadanie czasowe
     val taskType: String? = null,
-    // Cel dzienny kroków dla zadań STEPS (np. 10000)
+    //Cel dzienny kroków dla zadań STEPS (np. 10000)
     val stepGoal: Int? = null,
-    // Cel dystansu w km dla zadań biegowych (0 = brak celu km, używa timera)
+    //  Cel dystansu w km dla zadań biegowych (0 = brak celu km, używa timera)
     val targetKm: Float = 0f,
 
     // ── Aktywne zadanie krokowe ──────────────────────────────────────────
     // null = zadanie nieaktywne; 0 = tryb od północy; >0 = tryb od startu (baseline kroków)
     val stepsBaseline: Long? = null,
-    // Timestamp startu zadania (do wykrycia przekroczenia północy)
+    //Timestamp startu zadania (do wykrycia przekroczenia północy)
     val stepsStartedAt: Long? = null,
     // "FROM_MIDNIGHT" | "FROM_START" | null = nie dotyczy
     val stepsCountingMode: String? = null

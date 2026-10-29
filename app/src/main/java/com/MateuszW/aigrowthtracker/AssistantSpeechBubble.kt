@@ -22,10 +22,10 @@ import androidx.compose.foundation.Image
 
 /**
  * Minimalna obsługa **pogrubienia** w tekście AI.
- * Zamienia `**tekst**` i `*tekst*` na bold span.
+ * Zamienia `**tekst**` i `*tekst*` na bold span
  */
 fun parseBoldMarkdown(text: String): AnnotatedString = buildAnnotatedString {
-    // Regex: **bold** lub *bold* (dwa lub jeden asterisk)
+    // Regex: **bold** lub *bold* (dwa lub jdeen asterisk)
     val regex = Regex("""\*{1,2}(.+?)\*{1,2}""")
     var lastIndex = 0
     regex.findAll(text).forEach { match ->
@@ -42,7 +42,7 @@ fun parseBoldMarkdown(text: String): AnnotatedString = buildAnnotatedString {
 
 @Composable
 fun AssistantSpeechBubble(
-    painter: Painter?,c
+    painter: Painter?,
     speechText: String,
     modifier: Modifier = Modifier,
     avatarSize: Dp = 100.dp
@@ -51,18 +51,18 @@ fun AssistantSpeechBubble(
 
     Row(
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Bottom   // postać "stoi" na poziomie dołu dymka
+        verticalAlignment = Alignment.Bottom   //postać "stoi" na poziomie dołu dymka
     ) {
-        // ── Postać ──
+        //  ── Postać ──
         if (painter != null) {
             Image(
                 painter = painter,
                 contentDescription = "Asystent",
-                contentScale = ContentScale.Fit,   // bez przycinania, cała postać widoczna
+                contentScale = ContentScale.Fit,   //bez przycinania, cała postać widoczna
                 modifier = Modifier.size(avatarSize)
             )
         } else {
-            // Placeholder — ikona w kwadracie z zaokrąglonymi rogami
+            // Placeholder - ikona w kwadracie z zaokrąglonymi rogami
             Box(
                 modifier = Modifier
                     .size(avatarSize)
@@ -83,7 +83,7 @@ fun AssistantSpeechBubble(
 
         Spacer(Modifier.width(10.dp))
 
-        // ── Dymek mowy ──
+        //── Dymek mowy ──
         Surface(
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(
@@ -105,11 +105,11 @@ fun AssistantSpeechBubble(
     }
 }
 
-/** Wersja z ładowaniem – spinner zamiast dymka gdy tekst jest null */
+//  Wersja z ładowaniem - spinner zamiast dymka gdy tekst jest null
 @Composable
 fun AssistantSpeechBubbleOrLoading(
     painter: Painter?,
-    speechText: String?,          // null = ładowanie, "" = brak klucza/błąd, tekst = gotowe
+    speechText: String?,          //null = ładowanie, "" = brak klucza/błąd, tekst = gotowe
     loadingLabel: String = "Asystent analizuje…",
     modifier: Modifier = Modifier,
     avatarSize: Dp = 100.dp
@@ -147,7 +147,7 @@ fun AssistantSpeechBubbleOrLoading(
 
         Spacer(Modifier.width(10.dp))
 
-        // ── Zawartość dymka ──
+        //── Zawartość dymka ──
         when {
             speechText == null -> {
                 Surface(
